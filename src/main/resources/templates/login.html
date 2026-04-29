@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>TuenSSO Login</title>
+    <link rel="stylesheet" th:href="@{/assets/style.css}"/>
+</head>
+<body>
+<main class="auth-shell">
+    <section class="card">
+        <p class="eyebrow">TuenSSO</p>
+        <h1>Sign In</h1>
+
+        <p class="hint" th:if="${clientId != null}">
+            Sign-in request from client: <strong th:text="${clientId}"></strong>
+        </p>
+
+        <form method="post" th:action="@{/login}" class="form-stack">
+            <label for="username">Username</label>
+            <input id="username" type="text" name="username" autocomplete="username" required/>
+
+            <label for="password">Password</label>
+            <input id="password" type="password" name="password" autocomplete="current-password" required/>
+
+            <button type="submit">Sign in locally</button>
+        </form>
+
+        <p class="hint">
+            Demo accounts: admin/123456 or user/123456
+        </p>
+    </section>
+</main>
+</body>
+</html>

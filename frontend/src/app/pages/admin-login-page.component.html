@@ -1,0 +1,48 @@
+<section class="admin-login">
+  <div class="admin-login-brand">
+    <div class="admin-login-brand-inner">
+      <div class="admin-login-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32">
+          <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+        </svg>
+      </div>
+      <h1>TuenSSO</h1>
+      <p>Identity & Access Management</p>
+      <ul class="admin-login-features">
+        <li>Manage applications & OIDC clients</li>
+        <li>User & group administration</li>
+        <li>Single Sign-On across all services</li>
+      </ul>
+    </div>
+  </div>
+  <div class="admin-login-form-side">
+    <div class="admin-login-form-wrap">
+      <p class="eyebrow">Admin Console</p>
+      <h2>Sign in</h2>
+      <p class="helper-copy" style="margin-top:4px;">Enter your administrator credentials.</p>
+
+      @if (error()) {
+        <div class="message-banner error" style="margin-top:16px;">{{ error() }}</div>
+      }
+
+      <form action="/login" method="post" class="stack-form" style="margin-top:20px;">
+        @if (csrf()) {
+          <input type="hidden" [attr.name]="csrf()?.parameterName" [value]="csrf()?.token">
+        }
+        <input type="hidden" name="admin" value="1">
+
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" placeholder="admin" required>
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+
+        <button type="submit" [disabled]="!csrf()">Sign in</button>
+      </form>
+
+      <p class="helper-copy" style="margin-top:16px;text-align:center;">
+        Not an admin? <a href="/login">User sign in</a>
+      </p>
+    </div>
+  </div>
+</section>

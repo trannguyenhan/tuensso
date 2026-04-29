@@ -1,0 +1,45 @@
+<section class="admin-login">
+  <div class="admin-login-brand">
+    <div class="admin-login-brand-inner">
+      <div class="admin-login-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32">
+          <path d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"/>
+        </svg>
+      </div>
+      <h1>TuenSSO</h1>
+      <p>Identity & Access Management</p>
+      <ul class="admin-login-features">
+        <li>Single Sign-On across all services</li>
+        <li>Secure OpenID Connect authentication</li>
+        <li>Centralized identity management</li>
+      </ul>
+    </div>
+  </div>
+  <div class="admin-login-form-side">
+    <div class="admin-login-form-wrap">
+      <p class="eyebrow">TuenSSO</p>
+      <h2>Sign in</h2>
+      <p class="helper-copy" style="margin-top:4px;">Access the identity console and administration workspace.</p>
+
+      <form action="/login" method="post" class="stack-form" style="margin-top:20px;">
+        @if (csrf()) {
+          <input type="hidden" [attr.name]="csrf()?.parameterName" [value]="csrf()?.token">
+        }
+        <label for="username">Username or email</label>
+        <input id="username" name="username" type="text" autocomplete="username" required>
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+
+        <button type="submit" [disabled]="!csrf()">Sign in</button>
+      </form>
+
+      <div class="auth-footer">
+        <span>Demo:</span>
+        <strong>admin / 123456</strong>
+        <span>·</span>
+        <strong>user / 123456</strong>
+      </div>
+    </div>
+  </div>
+</section>

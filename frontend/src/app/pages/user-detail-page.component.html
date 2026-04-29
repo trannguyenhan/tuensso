@@ -1,0 +1,110 @@
+@if (loading()) {
+    <p class="empty-hint">Loading...</p>
+  } @else {
+    @if (message()) {
+      <div class="message-banner success">{{ message() }}</div>
+    }
+    @if (error()) {
+      <div class="message-banner error">{{ error() }}</div>
+    }
+
+    <div class="page-header">
+      <div>
+        <a routerLink="/admin/users" class="back-link">&larr; Users</a>
+        <h2>{{ isCreate ? 'Create User' : user()?.username }}</h2>
+      </div>
+      @if (!isCreate && user()) {
+        <span class="status-pill" [class.status-ok]="user()!.enabled" [class.status-off]="!user()!.enabled">
+          {{ user()!.enabled ? 'Enabled' : 'Disabled' }}
+        </span>
+      }
+    </div>
+
+    <div class="detail-grid">
+      <section class="surface-card">
+        <div class="card-head"><h3>{{ isCreate ? 'New user' : 'Profile' }}</h3></div>
+        <form class="stack-form" (ngSubmit)="save()">
+          <label>Username</label>
+          <input [(ngModel)]="form.username" name="username" autocomplete="off" required>
+          <label>Email</label>
+          <input [(ngModel)]="form.email" name="email" type="email" autocomplete="off" required>
+          @if (isCreate) {
+            <label>Password</label>
+            <input [(ngModel)]="form.password" name="password" type="password" autocomplete="new-password" required>
+          }
+          <button type="submit" [disabled]="saving()">{{ isCreate ? (saving() ? 'Creating...' : 'Create user') : (saving() ? 'Saving...' : 'Save changes') }}</button>
+        </form>
+      </section>
+
+      @if (!isCreate && user()) {
+        <section class="surface-card">
+          <div class="card-head"><h3>Actions</h3></div>
+          <div class="stack-form">
+            <label>Reset password</label>
+            <div class="input-with-action">
+              <input [(ngModel)]="newPassword" type="password" placeholder="New password" autocomplete="new-password">
+              <button type="button" class="ghost-action" (click)="resetPassword()">Reset</button>
+            </div>
+            <div class="action-row" style="margin-top:8px;">
+              <button type="button" class="ghost-action" (click)="toggleEnabled()">{{ user()!.enabled ? 'Disable' : 'Enable' }}</button>
+              <button type="button" class="ghost-action danger-text" (click)="deleteUser()">Delete</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="surface-card detail-full-width">
+          <div class="card-head"><h3>Group membership</h3></div>
+          @if (user()!.groups.length === 0) {
+            <p class="empty-hint">Not a member of any group.</p>
+          } @else {
+            <div class="membership-grid" style="margin-bottom:12px;">
+              @for (group of user()!.groups; track group.id) {
+                <div class="membership-pill">
+                  <a [routerLink]="'/admin/groups/' + group.id">{{ group.name }}</a>
+                  <button type="button" (click)="removeFromGroup(group.id)">Remove</button>
+                </div>
+              }
+            </div>
+          }
+          @if (availableGroups().length > 0) {
+            <div class="assign-inline">
+              <select [(ngModel)]="selectedGroupId">
+                <option value="" disabled>Select group...</option>
+                @for (g of availableGroups(); track g.id) {
+                  <option [value]="g.id">{{ g.name }}</option>
+                }
+              </select>
+              <button type="button" class="ghost-action" (click)="addToGroup()">Add to group</button>
+            </div>
+          }
+        </section>
+
+        <section class="surface-card detail-full-width">
+          <div class="card-head"><h3>Roles</h3></div>
+          @if (userRoles().length === 0) {
+            <p class="empty-hint">No roles assigned.</p>
+          } @else {
+            <div class="membership-grid" style="margin-bottom:12px;">
+              @for (role of userRoles(); track role.id) {
+                <div class="membership-pill">
+                  <span>{{ role.name }}</span>
+                  <button type="button" (click)="removeRole(role.id)">Remove</button>
+                </div>
+              }
+            </div>
+          }
+          @if (availableRoles().length > 0) {
+            <div class="assign-inline">
+              <select [(ngModel)]="selectedRoleId">
+                <option value="" disabled>Select role...</option>
+                @for (r of availableRoles(); track r.id) {
+                  <option [value]="r.id">{{ r.name }}</option>
+                }
+              </select>
+              <button type="button" class="ghost-action" (click)="assignRole()">Assign role</button>
+            </div>
+          }
+        </section>
+      }
+    </div>
+  }

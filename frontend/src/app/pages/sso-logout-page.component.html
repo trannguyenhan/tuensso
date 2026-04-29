@@ -1,0 +1,35 @@
+<section class="auth-page">
+  <div class="auth-card" style="text-align:center;">
+    <div class="sso-card-avatar" style="background:var(--primary);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28">
+        <path d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3-3l3-3m0 0l-3-3m3 3H9"/>
+      </svg>
+    </div>
+
+    @if (loading()) {
+      <p class="auth-copy" style="margin-top:12px;">Loading...</p>
+    } @else if (done()) {
+      <h1 style="margin-top:12px;">Logged out</h1>
+      <p class="auth-copy" style="margin-top:8px;">Your SSO session has been ended.</p>
+      @if (redirectUri()) {
+        <p class="sso-card-footer">Redirecting back to <strong>{{ clientName() }}</strong>...</p>
+      } @else {
+        <a href="/login" class="sso-card-footer" style="display:block;margin-top:16px;">Return to sign in</a>
+      }
+    } @else if (!valid()) {
+      <h1 style="margin-top:12px;">Invalid request</h1>
+      <p class="auth-copy" style="margin-top:8px;">The logout request is not valid.</p>
+      <a href="/login" class="sso-card-footer" style="display:block;margin-top:16px;">Return to sign in</a>
+    } @else {
+      <h1 style="margin-top:12px;">Sign out</h1>
+      <p class="auth-copy" style="margin-top:8px;">
+        Do you want to sign out of <strong>{{ clientName() }}</strong> and TuenSSO?
+      </p>
+      <div class="auth-form" style="margin-top:20px;">
+        <button type="button" (click)="confirmLogout()">Sign out</button>
+        <button type="button" class="ghost-action" style="width:100;" (click)="cancel()">Cancel</button>
+      </div>
+      <p class="sso-card-footer">Powered by <strong>TuenSSO</strong></p>
+    }
+  </div>
+</section>

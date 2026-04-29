@@ -1,0 +1,46 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: dev
+
+  application:
+    name: tuensso
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tuensso
+    username: postgres
+    password: postgresql12345
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  thymeleaf:
+    cache: false
+
+logging:
+  level:
+    org.springframework.security: INFO
+    org.springframework.security.oauth2: DEBUG
+    org.springframework.security.oauth2.server.authorization: TRACE
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+tuensso:
+  issuer: http://localhost:8080
+  logo-upload-dir: ./data/app-logos

@@ -1,0 +1,133 @@
+@if (loading()) {
+  <div class="screen-loader">Loading...</div>
+} @else if (profile()) {
+  <section class="console-screen">
+    <div class="console-layout">
+      <!-- Sidebar -->
+      <aside class="console-sidebar">
+        <div class="sidebar-brand">
+          <p class="eyebrow">TuenSSO</p>
+          <h1>My Account</h1>
+          <p class="helper-copy">{{ profile()!.username }}</p>
+        </div>
+        <nav class="sidebar-nav">
+          <button type="button" class="sidebar-link" [class.active]="section === 'profile'" (click)="section = 'profile'">Profile</button>
+          <button type="button" class="sidebar-link" [class.active]="section === 'password'" (click)="section = 'password'">Password</button>
+          <button type="button" class="sidebar-link" [class.active]="section === 'sessions'" (click)="section = 'sessions'">Sessions</button>
+        </nav>
+        <div class="sidebar-actions">
+          @if (isAdmin()) {
+            <a href="/admin/dashboard" class="sidebar-secondary-link">Admin Console</a>
+          }
+          <button type="button" class="sidebar-logout" (click)="logout()">Logout</button>
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="console-main">
+        @if (message()) {
+          <div class="message-banner success">{{ message() }}</div>
+        }
+        @if (error()) {
+          <div class="message-banner error">{{ error() }}</div>
+        }
+
+        <!-- Profile Section -->
+        @if (section === 'profile') {
+          <div class="page-header"><h2>Profile</h2></div>
+          <div class="surface-card" style="max-width:600px;">
+            <div class="inline-head" style="margin-bottom:20px;">
+              <div class="account-header">
+                <div class="avatar-circle" style="width:56px;height:56px;font-size:22px;">{{ profile()!.username.charAt(0).toUpperCase() }}</div>
+                <div>
+                  <h3>{{ profile()!.username }}</h3>
+                  <p class="helper-copy">{{ profile()!.email }}</p>
+                </div>
+              </div>
+              @if (!editing) {
+                <button type="button" class="ghost-action" (click)="startEdit()">Edit</button>
+              }
+            </div>
+
+            @if (editing) {
+              <form class="stack-form" (ngSubmit)="saveProfile()">
+                <label>Username</label>
+                <input [value]="profile()!.username" disabled>
+                <p class="helper-copy">Username cannot be changed.</p>
+
+                <label>Email</label>
+                <input [(ngModel)]="editForm.email" name="email" type="email" required>
+
+                <div class="action-row">
+                  <button type="submit">Save</button>
+                  <button type="button" class="ghost-action" (click)="cancelEdit()">Cancel</button>
+                </div>
+              </form>
+            } @else {
+              <div class="info-list">
+                <div class="info-row">
+                  <span>Username</span>
+                  <span>{{ profile()!.username }}</span>
+                </div>
+                <div class="info-row">
+                  <span>Email</span>
+                  <span>{{ profile()!.email }}</span>
+                </div>
+                <div class="info-row">
+                  <span>Status</span>
+                  <span>
+                    <span class="status-pill" [class.status-ok]="profile()!.enabled" [class.status-off]="!profile()!.enabled">
+                      {{ profile()!.enabled ? 'Active' : 'Disabled' }}
+                    </span>
+                  </span>
+                </div>
+                <div class="info-row">
+                  <span>Groups</span>
+                  <span>{{ profile()!.groups.length > 0 ? profile()!.groups.join(', ') : 'None' }}</span>
+                </div>
+                <div class="info-row">
+                  <span>Member since</span>
+                  <span>{{ profile()!.createdAt | date:'mediumDate' }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Password Section -->
+        @if (section === 'password') {
+          <div class="page-header"><h2>Change Password</h2></div>
+          <div class="surface-card" style="max-width:400px;">
+            <form class="stack-form" (ngSubmit)="changePassword()">
+              <label>Current password</label>
+              <input [(ngModel)]="pwForm.currentPassword" name="currentPassword" type="password" autocomplete="current-password" required>
+              <label>New password</label>
+              <input [(ngModel)]="pwForm.newPassword" name="newPassword" type="password" autocomplete="new-password" required>
+              <label>Confirm new password</label>
+              <input [(ngModel)]="pwForm.confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required>
+              <button type="submit">Change password</button>
+            </form>
+          </div>
+        }
+
+        <!-- Sessions Section -->
+        @if (section === 'sessions') {
+          <div class="page-header"><h2>Sessions</h2></div>
+          <div class="surface-card" style="max-width:600px;">
+            <div class="info-list">
+              <div class="info-row">
+                <span>Current session</span>
+                <span class="status-pill status-ok">Active</span>
+              </div>
+            </div>
+            <div style="margin-top:16px;">
+              <button type="button" class="ghost-action danger-text" (click)="logout()">Sign out all sessions</button>
+            </div>
+          </div>
+        }
+      </main>
+    </div>
+  </section>
+} @else {
+  <div class="screen-loader">Unable to load profile.</div>
+}

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${is404} ? 'Page Not Found' : 'Error'">Error</title>
+    <link rel="stylesheet" th:href="@{/assets/style.css}"/>
+</head>
+<body>
+<main class="auth-shell">
+    <section class="card" style="text-align:center;">
+        <p class="eyebrow">TuenSSO</p>
+        <h1 style="font-size:64px;margin-top:12px;" th:text="${status}">500</h1>
+        <p th:if="${is404}" class="hint" style="font-size:16px;margin-top:4px;">The page you requested does not exist.</p>
+        <p th:unless="${is404}" class="hint" style="font-size:16px;margin-top:4px;">Something went wrong on our end.</p>
+        <div style="margin-top:20px;">
+            <a href="/" class="ghost-btn">Back to Home</a>
+        </div>
+    </section>
+</main>
+</body>
+</html>

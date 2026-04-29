@@ -1,0 +1,71 @@
+@if (loading()) {
+    <p class="empty-hint">Loading...</p>
+  } @else if (bootstrap()) {
+    <div class="page-header"><h2>Dashboard</h2></div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-value">{{ bootstrap()!.apps.length }}</div>
+        <div class="stat-label">Applications</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ bootstrap()!.users.length }}</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ enabledUsers }}</div>
+        <div class="stat-label">Active Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ disabledUsers }}</div>
+        <div class="stat-label">Disabled Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ bootstrap()!.groups.length }}</div>
+        <div class="stat-label">Groups</div>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="surface-card">
+        <div class="card-head"><h3>Quick actions</h3></div>
+        <div class="stack-form">
+          <a routerLink="/admin/apps/create" class="ghost-action" style="text-decoration:none;justify-content:flex-start;">Create application</a>
+          <a routerLink="/admin/users/create" class="ghost-action" style="text-decoration:none;justify-content:flex-start;">Create user</a>
+          <a routerLink="/admin/groups/create" class="ghost-action" style="text-decoration:none;justify-content:flex-start;">Create group</a>
+        </div>
+      </div>
+
+      <div class="surface-card">
+        <div class="card-head"><h3>System info</h3></div>
+        <div class="info-list">
+          <div class="info-row"><span>Issuer</span><span class="mono">{{ bootstrap()!.issuer }}</span></div>
+          <div class="info-row"><span>Protocol</span><span>OpenID Connect 1.0</span></div>
+          <div class="info-row"><span>Server</span><span>TuenSSO / Spring Authorization Server</span></div>
+          <div class="info-row"><span>Java</span><span>21</span></div>
+        </div>
+      </div>
+
+      <div class="surface-card detail-full-width">
+        <div class="card-head"><h3>Recent users</h3></div>
+        @if (bootstrap()!.users.length === 0) {
+          <p class="empty-hint">No users yet.</p>
+        } @else {
+          <div class="table-shell">
+            <table class="data-table">
+              <thead><tr><th>Username</th><th>Email</th><th>Status</th></tr></thead>
+              <tbody>
+                @for (user of bootstrap()!.users.slice(0, 5); track user.id) {
+                  <tr>
+                    <td><a [routerLink]="'/admin/users/' + user.id" class="table-link">{{ user.username }}</a></td>
+                    <td class="mono">{{ user.email }}</td>
+                    <td><span class="status-pill" [class.status-ok]="user.enabled" [class.status-off]="!user.enabled">{{ user.enabled ? 'Enabled' : 'Disabled' }}</span></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  }

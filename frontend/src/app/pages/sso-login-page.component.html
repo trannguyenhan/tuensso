@@ -1,0 +1,25 @@
+<section class="auth-page">
+  <div class="auth-card" style="text-align:center;">
+    @if (brandLogo) {
+      <img [src]="brandLogo" alt="" class="sso-card-logo">
+    } @else {
+      <div class="sso-card-avatar" [style.background]="brandColor">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+          <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+        </svg>
+      </div>
+    }
+    <p class="auth-copy" style="margin-top:12px;">Sign in to <strong>{{ brandName }}</strong></p>
+
+    <form action="/login" method="post" class="auth-form">
+      @if (csrf()) {
+        <input type="hidden" [attr.name]="csrf()?.parameterName" [value]="csrf()?.token">
+      }
+      <input id="username" name="username" type="text" autocomplete="username" placeholder="Username or email" required aria-label="Username or email">
+      <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Password" required aria-label="Password">
+      <button type="submit" [disabled]="!csrf()" [style.background]="brandColor">Sign in</button>
+    </form>
+
+    <p class="sso-card-footer">Powered by <strong>TuenSSO</strong></p>
+  </div>
+</section>

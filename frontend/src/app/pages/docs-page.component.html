@@ -1,0 +1,166 @@
+<div class="docs-page">
+    <h2>Getting Started</h2>
+    <p>TuenSSO is a standalone SSO server built with Java, providing OpenID Connect services for your applications. It replaces Keycloak with a lightweight, fully controllable codebase.</p>
+
+    <h3>Architecture</h3>
+    <p>TuenSSO acts as an Identity Provider. Any application that supports OIDC can connect to TuenSSO for authentication.</p>
+    <pre>App A  --OIDC--&gt;
+App B  --OIDC--&gt;  TuenSSO :8080
+App C  --OIDC--&gt;</pre>
+
+    <h3>Default accounts</h3>
+    <table>
+      <thead><tr><th>Username</th><th>Password</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td>admin</td><td>123456</td><td>ROLE_ADMIN</td></tr>
+        <tr><td>user</td><td>123456</td><td>ROLE_USER</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Build &amp; Run</h2>
+
+    <h3>Prerequisites</h3>
+    <ul>
+      <li>Java 21</li>
+      <li>Maven 3.9+</li>
+      <li>Internet connection (first run downloads Node/NPM for frontend build)</li>
+    </ul>
+
+    <h3>Option 1: Dev mode (recommended)</h3>
+    <pre>mvn spring-boot:run</pre>
+    <p>This builds the Angular frontend, copies it to classpath resources, and starts Spring Boot.</p>
+
+    <h3>Option 2: Build artifact</h3>
+    <pre>mvn clean package
+java -jar target/tuensso-0.0.1-SNAPSHOT.jar</pre>
+    <p>To use a different port:</p>
+    <pre>java -jar target/tuensso-0.0.1-SNAPSHOT.jar --server.port=8081</pre>
+
+    <h3>Option 3: Docker</h3>
+    <pre># Build image
+docker build -t tuensso .
+
+# Run container
+docker run -p 8080:8080 tuensso</pre>
+    <p>With custom port and PostgreSQL:</p>
+    <pre>docker run -p 8080:8080 \
+  -e SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/tuensso \
+  -e SPRING_DATASOURCE_USERNAME=tuensso \
+  -e SPRING_DATASOURCE_PASSWORD=secret \
+  tuensso</pre>
+
+    <h2>OIDC Endpoints</h2>
+    <table>
+      <thead><tr><th>Endpoint</th><th>URL</th></tr></thead>
+      <tbody>
+        <tr><td>Discovery</td><td><code>/.well-known/openid-configuration</code></td></tr>
+        <tr><td>Authorization</td><td><code>/oauth2/authorize</code></td></tr>
+        <tr><td>Token</td><td><code>/oauth2/token</code></td></tr>
+        <tr><td>JWKS</td><td><code>/oauth2/jwks</code></td></tr>
+        <tr><td>UserInfo</td><td><code>/userinfo</code></td></tr>
+        <tr><td>Introspect</td><td><code>/oauth2/introspect</code></td></tr>
+        <tr><td>Revoke</td><td><code>/oauth2/revoke</code></td></tr>
+        <tr><td>Logout</td><td><code>/connect/logout</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2>Admin REST API</h2>
+    <p>All admin endpoints require authentication with <code>ROLE_ADMIN</code>.</p>
+
+    <h3>Clients</h3>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>GET</td><td><code>/api/admin/clients</code></td><td>List all clients</td></tr>
+        <tr><td>GET</td><td><code>/api/admin/clients/&#123;clientId&#125;</code></td><td>Get client details</td></tr>
+        <tr><td>POST</td><td><code>/api/admin/clients</code></td><td>Register new client</td></tr>
+        <tr><td>PUT</td><td><code>/api/admin/clients/&#123;clientId&#125;</code></td><td>Update client</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Users</h3>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>GET</td><td><code>/api/admin/users</code></td><td>List all users</td></tr>
+        <tr><td>POST</td><td><code>/api/admin/users</code></td><td>Create user</td></tr>
+        <tr><td>PUT</td><td><code>/api/admin/users/&#123;id&#125;</code></td><td>Update user profile</td></tr>
+        <tr><td>PUT</td><td><code>/api/admin/users/&#123;id&#125;/enable</code></td><td>Enable user</td></tr>
+        <tr><td>PUT</td><td><code>/api/admin/users/&#123;id&#125;/disable</code></td><td>Disable user</td></tr>
+        <tr><td>PUT</td><td><code>/api/admin/users/&#123;id&#125;/password</code></td><td>Reset password</td></tr>
+        <tr><td>DELETE</td><td><code>/api/admin/users/&#123;id&#125;</code></td><td>Delete user</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Groups</h3>
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>GET</td><td><code>/api/admin/groups</code></td><td>List all groups</td></tr>
+        <tr><td>POST</td><td><code>/api/admin/groups</code></td><td>Create group</td></tr>
+        <tr><td>PUT</td><td><code>/api/admin/groups/&#123;id&#125;</code></td><td>Update group</td></tr>
+        <tr><td>POST</td><td><code>/api/admin/groups/&#123;id&#125;/members/&#123;userId&#125;</code></td><td>Add member</td></tr>
+        <tr><td>DELETE</td><td><code>/api/admin/groups/&#123;id&#125;/members/&#123;userId&#125;</code></td><td>Remove member</td></tr>
+        <tr><td>DELETE</td><td><code>/api/admin/groups/&#123;id&#125;</code></td><td>Delete group</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Integrate with Your App</h2>
+
+    <h3>Spring Boot</h3>
+    <p>Add the OAuth2 client dependency:</p>
+    <pre>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-oauth2-client&lt;/artifactId&gt;
+&lt;/dependency&gt;</pre>
+    <p>Configure <code>application.yml</code>:</p>
+    <pre>spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          tuensso:
+            client-id: myapp
+            client-secret: my-secret
+            scope: openid,profile,email
+            redirect-uri: "&#123;baseUrl&#125;/login/oauth2/code/&#123;registrationId&#125;"
+        provider:
+          tuensso:
+            issuer-uri: http://localhost:8080</pre>
+
+    <h3>Any OIDC-compatible app</h3>
+    <pre>Issuer URI:        http://localhost:8080
+Authorization URI: http://localhost:8080/oauth2/authorize
+Token URI:         http://localhost:8080/oauth2/token
+JWKS URI:          http://localhost:8080/oauth2/jwks
+UserInfo URI:      http://localhost:8080/userinfo</pre>
+
+    <h2>PostgreSQL (Production)</h2>
+    <p>By default TuenSSO uses H2 in-memory database. For production, switch to PostgreSQL:</p>
+    <pre>spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tuensso
+    username: tuensso
+    password: your-password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate</pre>
+
+    <h2>Dockerfile</h2>
+    <p>The project includes a multi-stage Dockerfile:</p>
+    <pre># Build
+docker build -t tuensso .
+
+# Run with H2 (dev)
+docker run -p 8080:8080 tuensso
+
+# Run with PostgreSQL (production)
+docker run -p 8080:8080 \
+  -e SPRING_DATASOURCE_URL=jdbc:postgresql://host:5432/tuensso \
+  -e SPRING_DATASOURCE_USERNAME=tuensso \
+  -e SPRING_DATASOURCE_PASSWORD=secret \
+  -e SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver \
+  -e SPRING_JPA_HIBERNATE_DDL_AUTO=validate \
+  tuensso</pre>
+  </div>

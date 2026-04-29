@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>TuenSSO Home</title>
+    <link rel="stylesheet" th:href="@{/assets/style.css}"/>
+</head>
+<body>
+<main class="dashboard-shell" th:if="${isAdmin}">
+    <header class="mobile-topbar">
+        <button class="icon-btn" id="openSidebar" type="button" aria-label="Open menu">Menu</button>
+        <p class="topbar-title">TuenSSO Console</p>
+        <a class="link" th:href="@{/logout}">Logout</a>
+    </header>
+
+    <div class="console-layout">
+        <aside class="leftbar" id="leftbar">
+            <div class="leftbar-head">
+                <p class="eyebrow">TuenSSO</p>
+                <h2>Realm Admin</h2>
+                <p class="hint">Hello <strong th:text="${username}"></strong></p>
+            </div>
+
+            <nav class="left-nav">
+                <button class="nav-item active" data-tab="apps" type="button">Apps</button>
+                <button class="nav-item" data-tab="users" type="button">Users</button>
+                <button class="nav-item" data-tab="groups" type="button">Groups</button>
+                <button class="nav-item" data-tab="integration" type="button">Integration</button>
+            </nav>
+
+            <div class="leftbar-actions">
+                <a class="ghost-btn" th:href="@{/api/oidc/endpoints}">Metadata JSON</a>
+                <a class="link" th:href="@{/logout}">Logout</a>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <section class="workspace">
+            <section class="notice success" th:if="${successMessage != null}" th:text="${successMessage}"></section>
+
+            <section class="tab-panel active" data-tab-panel="apps">
+                <section class="tab-shell tab-shell-apps">
+                    <section class="hero-panel hero-panel-dashboard">
+                        <div>
+                            <p class="eyebrow">Control Center</p>
+                            <h1>SSO System Management</h1>
+                            <p class="hint">Create and manage OIDC applications, branding assets, and redirect settings from a single enterprise console.</p>
+                        </div>
+                        <div class="metric-grid">
+                            <article class="metric-card">
+                                <span class="metric-label">Applications</span>
+                                <strong class="metric-value" th:text="${#lists.size(apps)}"></strong>
+                                <span class="metric-note">Registered clients</span>
+                            </article>
+                            <article class="metric-card">
+                                <span class="metric-label">Users</span>
+                                <strong class="metric-value" th:text="${#lists.size(users)}"></strong>
+                                <span class="metric-note">Managed identities</span>
+                            </article>
+                            <article class="metric-card">
+                                <span class="metric-label">Groups</span>
+                                <strong class="metric-value" th:text="${#lists.size(groups)}"></strong>
+                                <span class="metric-note">Access group sets</span>
+                            </article>
+                        </div>
+                    </section>
+
+                    <div class="tab-content-grid">
+                        <section class="card card-form">
+                            <div class="panel-header">
+                                <p class="eyebrow">Create App</p>
+                                <h2>Create OIDC Client</h2>
+                                <p class="hint">Define client credentials, redirect URLs, and security settings for each connected application.</p>
+                            </div>
+
+                            <form class="form-stack" method="post" th:action="@{/apps}" th:object="${createAppForm}">
+                                <label for="clientId">Client ID</label>
+                                <input id="clientId" type="text" th:field="*{clientId}" placeholder="crm-portal" required/>
+
+                                <label for="clientName">App name</label>
+                                <input id="clientName" type="text" th:field="*{clientName}" placeholder="CRM Portal"/>
+
+                                <label for="clientSecret">Client Secret</label>
+                                <input id="clientSecret" type="text" th:field="*{clientSecret}" placeholder="secret-value" required/>
+
+                                <label for="redirectUris">Redirect URIs</label>
+                                <textarea id="redirectUris" th:field="*{redirectUris}" rows="4" placeholder="http://localhost:3000/login/oauth2/code/tuensso" required></textarea>
+
+                                <label for="scopes">Scopes</label>
+                                <input id="scopes" type="text" th:field="*{scopes}" placeholder="openid,profile,email"/>
+
+                                <label class="checkbox-row" for="requirePkce">
+                                    <input id="requirePkce" type="checkbox" th:field="*{requirePkce}"/>
+                                    <span>Require PKCE</span>
+                                </label>
+
+                                <button type="submit">Create app</button>
+                            </form>
+                        </section>
+
+                        <section class="card card-table">
+                            <div class="section-head">
+                                <div>
+                                    <p class="eyebrow">Applications</p>
+                                    <h2>Registered Apps</h2>
+                                </div>
+                                <span class="panel-badge" th:text="${#lists.size(apps)} + ' total'"></span>
+                            </div>
+
+                            <div class="table-wrap">
+                                <table class="admin-table admin-table-apps">
+                                    <thead>
+                                    <tr>
+                                        <th>App</th>
+                                        <th>Scopes</th>
+                                        <th>Redirect URI</th>
+                                        <th>Security</th>
+                                        <th>Branding</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="app : ${apps}">
+                                        <td>
+                                            <div class="app-cell">
+                                                <img class="app-logo" th:src="${app.logoUrlOrDefault()}" alt="app logo"/>
+                                                <div>
+                                                    <strong th:text="${app.clientName}"></strong>
+                                                    <div class="mono muted-text" th:text="${app.clientId}"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="table-chip" th:text="${app.scopesDisplay()}"></span>
+                                        </td>
+                                        <td class="mono" th:text="${app.primaryRedirectUri()}"></td>
+                                        <td>
+                                            <span class="status-chip" th:classappend="${app.requirePkce} ? ' ok' : ' neutral'"
+                                                  th:text="${app.requirePkce} ? 'PKCE enabled' : 'Standard code flow'"></span>
+                                        </td>
+                                        <td>
+                                            <form method="post" th:action="@{'/apps/' + ${app.clientId} + '/logo'}" enctype="multipart/form-data" class="upload-inline">
+                                                <label class="file-trigger">
+                                                    <span>Select logo</span>
+                                                    <input type="file" name="logo" accept=".png,.jpg,.jpeg,.webp,.svg" required/>
+                                                </label>
+                                                <button type="submit" class="small-btn">Upload</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </div>
+                </section>
+            </section>
+
+            <section class="tab-panel" data-tab-panel="users">
+                <section class="tab-shell">
+                    <section class="tab-header-card">
+                        <div>
+                            <p class="eyebrow">Identity Directory</p>
+                            <h2>Users</h2>
+                            <p class="hint">Manage local identities, activation status, password resets, and group assignments.</p>
+                        </div>
+                        <span class="panel-badge" th:text="${#lists.size(users)} + ' users'"></span>
+                    </section>
+
+                    <div class="tab-content-grid">
+                        <section class="card card-form">
+                            <div class="panel-header">
+                                <p class="eyebrow">Create User</p>
+                                <h2>Create New User</h2>
+                            </div>
+
+                            <form class="form-stack" method="post" th:action="@{/admin/ui/users}" th:object="${createUserForm}">
+                                <label for="username">Username</label>
+                                <input id="username" type="text" th:field="*{username}" required/>
+
+                                <label for="email">Email</label>
+                                <input id="email" type="email" th:field="*{email}" required/>
+
+                                <label for="password">Password</label>
+                                <input id="password" type="text" th:field="*{password}" required/>
+
+                                <button type="submit">Create user</button>
+                            </form>
+                        </section>
+
+                        <section class="card card-table">
+                            <div class="section-head">
+                                <div>
+                                    <p class="eyebrow">Users</p>
+                                    <h2>User List</h2>
+                                </div>
+                            </div>
+
+                            <div class="table-wrap">
+                                <table class="admin-table">
+                                    <thead>
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Status</th>
+                                        <th>Groups</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="u : ${users}">
+                                        <td th:text="${u.username}"></td>
+                                        <td class="mono" th:text="${u.email}"></td>
+                                        <td>
+                                            <span class="status-chip" th:classappend="${u.enabled} ? ' ok' : ' off'"
+                                                  th:text="${u.enabled} ? 'Enabled' : 'Disabled'"></span>
+                                        </td>
+                                        <td th:text="${u.groupsDisplay()}"></td>
+                                        <td>
+                                            <div class="action-inline">
+                                                <form method="post" th:action="@{'/admin/ui/users/' + ${u.id} + '/toggle'}">
+                                                    <button type="submit" class="small-btn" th:text="${u.enabled} ? 'Disable' : 'Enable'"></button>
+                                                </form>
+                                                <form method="post" th:action="@{'/admin/ui/users/' + ${u.id} + '/delete'}">
+                                                    <button type="submit" class="small-btn danger">Delete</button>
+                                                </form>
+                                                <form method="post" th:action="@{'/admin/ui/users/' + ${u.id} + '/password'}" class="password-inline">
+                                                    <input type="text" name="newPassword" placeholder="new password" required/>
+                                                    <button type="submit" class="small-btn">Reset</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </div>
+                </section>
+            </section>
+
+            <section class="tab-panel" data-tab-panel="groups">
+                <section class="tab-shell">
+                    <section class="tab-header-card">
+                        <div>
+                            <p class="eyebrow">Access Structure</p>
+                            <h2>Groups</h2>
+                            <p class="hint">Organize user permissions with reusable groups and manage memberships from one workflow.</p>
+                        </div>
+                        <span class="panel-badge" th:text="${#lists.size(groups)} + ' groups'"></span>
+                    </section>
+
+                    <div class="tab-content-grid">
+                        <section class="card card-form">
+                            <div class="panel-header">
+                                <p class="eyebrow">Create Group</p>
+                                <h2>Create New Group</h2>
+                            </div>
+
+                            <form class="form-stack" method="post" th:action="@{/admin/ui/groups}" th:object="${createGroupForm}">
+                                <label for="groupName">Group name</label>
+                                <input id="groupName" type="text" th:field="*{name}" required/>
+
+                                <label for="groupDescription">Description</label>
+                                <textarea id="groupDescription" th:field="*{description}" rows="3"></textarea>
+
+                                <button type="submit">Create group</button>
+                            </form>
+
+                            <hr class="divider"/>
+
+                            <div class="panel-header panel-header-inline">
+                                <div>
+                                    <p class="eyebrow">Membership</p>
+                                    <h2>Assign Group</h2>
+                                </div>
+                            </div>
+
+                            <form class="form-stack" method="post" th:action="@{/admin/ui/groups/members}" th:object="${assignGroupForm}">
+                                <label for="assignUser">User</label>
+                                <select id="assignUser" th:field="*{userId}">
+                                    <option th:each="u : ${users}" th:value="${u.id}" th:text="${u.username}"></option>
+                                </select>
+
+                                <label for="assignGroup">Group</label>
+                                <select id="assignGroup" th:field="*{groupId}">
+                                    <option th:each="g : ${groups}" th:value="${g.id}" th:text="${g.name}"></option>
+                                </select>
+
+                                <button type="submit">Add user to group</button>
+                            </form>
+                        </section>
+
+                        <section class="card card-table card-table-stack">
+                            <div class="section-block">
+                                <div class="section-head">
+                                    <div>
+                                        <p class="eyebrow">Groups</p>
+                                        <h2>Group List</h2>
+                                    </div>
+                                </div>
+
+                                <div class="table-wrap">
+                                    <table class="admin-table">
+                                        <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Description</th>
+                                            <th>Members</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:each="g : ${groups}">
+                                            <td th:text="${g.name}"></td>
+                                            <td th:text="${g.descriptionOrDash()}"></td>
+                                            <td th:text="${g.memberCount}"></td>
+                                            <td>
+                                                <form method="post" th:action="@{'/admin/ui/groups/' + ${g.id} + '/delete'}">
+                                                    <button type="submit" class="small-btn danger">Delete</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="section-block">
+                                <div class="section-head section-spacing">
+                                    <div>
+                                        <p class="eyebrow">Membership</p>
+                                        <h2>Users in Groups</h2>
+                                    </div>
+                                </div>
+
+                                <div class="table-wrap">
+                                    <table class="admin-table">
+                                        <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Groups</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:each="u : ${users}">
+                                            <td th:text="${u.username}"></td>
+                                            <td>
+                                                <div class="membership-list" th:if="${!#lists.isEmpty(u.groups)}">
+                                                    <div class="membership-item" th:each="g : ${u.groups}">
+                                                        <span class="membership-name" th:text="${g.name}"></span>
+                                                        <form method="post" th:action="@{'/admin/ui/groups/' + ${g.id} + '/members/' + ${u.id} + '/remove'}">
+                                                            <button type="submit" class="small-btn">Remove</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                                <span th:if="${#lists.isEmpty(u.groups)}">-</span>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </section>
+            </section>
+
+            <section class="tab-panel" data-tab-panel="integration">
+                <section class="tab-shell tab-shell-integration">
+                    <section class="tab-header-card">
+                        <div>
+                            <p class="eyebrow">Integration</p>
+                            <h2>Connection Endpoints</h2>
+                            <p class="hint">Share issuer metadata and endpoint URLs with downstream applications and platform teams.</p>
+                        </div>
+                        <a class="ghost-btn" th:href="@{/api/oidc/endpoints}">Open JSON metadata</a>
+                    </section>
+
+                    <div class="integration-card-grid">
+                        <article class="integration-summary-card">
+                            <span class="metric-label">Issuer</span>
+                            <strong class="integration-primary mono" th:text="${issuer}"></strong>
+                            <span class="metric-note">Base identity provider URL</span>
+                        </article>
+                        <article class="integration-summary-card">
+                            <span class="metric-label">Discovery</span>
+                            <strong class="integration-primary mono" th:text="${issuer} + '/.well-known/openid-configuration'"></strong>
+                            <span class="metric-note">Standards-based metadata endpoint</span>
+                        </article>
+                    </div>
+
+                    <section class="card card-table">
+                        <div class="section-head">
+                            <div>
+                                <p class="eyebrow">Issuer</p>
+                                <h2>General Integration Information</h2>
+                            </div>
+                        </div>
+
+                        <div class="table-wrap">
+                            <table class="admin-table">
+                                <thead>
+                                <tr>
+                                    <th>Endpoint</th>
+                                    <th>URL</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>Issuer</td>
+                                    <td class="mono" th:text="${issuer}"></td>
+                                </tr>
+                                <tr>
+                                    <td>Discovery</td>
+                                    <td class="mono" th:text="${issuer} + '/.well-known/openid-configuration'"></td>
+                                </tr>
+                                <tr>
+                                    <td>Authorization</td>
+                                    <td class="mono" th:text="${issuer} + '/oauth2/authorize'"></td>
+                                </tr>
+                                <tr>
+                                    <td>Token</td>
+                                    <td class="mono" th:text="${issuer} + '/oauth2/token'"></td>
+                                </tr>
+                                <tr>
+                                    <td>JWKS</td>
+                                    <td class="mono" th:text="${issuer} + '/oauth2/jwks'"></td>
+                                </tr>
+                                <tr>
+                                    <td>UserInfo</td>
+                                    <td class="mono" th:text="${issuer} + '/userinfo'"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </section>
+            </section>
+        </section>
+    </section>
+    </div>
+</main>
+
+<main class="dashboard-shell" th:if="${!isAdmin}">
+    <section class="card">
+        <p class="eyebrow">User</p>
+        <h2>You are signed in</h2>
+        <p class="hint">The app management console is available to admins only. Sign in with an admin account to view integration settings and create new OIDC apps.</p>
+    </section>
+</main>
+
+<script>
+    const navItems = document.querySelectorAll('.nav-item');
+    const panels = document.querySelectorAll('.tab-panel');
+    const leftbar = document.getElementById('leftbar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const openSidebar = document.getElementById('openSidebar');
+
+    navItems.forEach((button) => {
+        button.addEventListener('click', () => {
+            const tab = button.dataset.tab;
+            navItems.forEach((item) => item.classList.remove('active'));
+            panels.forEach((panel) => panel.classList.remove('active'));
+            button.classList.add('active');
+            document.querySelector('[data-tab-panel="' + tab + '"]')?.classList.add('active');
+            leftbar?.classList.remove('open');
+            sidebarOverlay?.classList.remove('show');
+        });
+    });
+
+    openSidebar?.addEventListener('click', () => {
+        leftbar?.classList.add('open');
+        sidebarOverlay?.classList.add('show');
+    });
+
+    sidebarOverlay?.addEventListener('click', () => {
+        leftbar?.classList.remove('open');
+        sidebarOverlay?.classList.remove('show');
+    });
+</script>
+</body>
+</html>

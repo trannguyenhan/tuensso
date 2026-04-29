@@ -1,0 +1,252 @@
+@if (confirmAction(); as confirm) {
+    <div class="confirm-overlay" (click)="cancelConfirm()">
+      <div class="confirm-dialog" (click)="$event.stopPropagation()">
+        <h3>{{ confirm.title }}</h3>
+        <p>{{ confirm.body }}</p>
+        <div class="confirm-actions">
+          <button type="button" class="ghost-action" (click)="cancelConfirm()">Cancel</button>
+          <button type="button" class="danger-button" (click)="executeConfirm()">Confirm</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (message()) {
+    <div class="message-banner success" (click)="dismissMessage()">{{ message() }}</div>
+  }
+  @if (error()) {
+    <div class="message-banner error" (click)="dismissMessage()">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <p class="empty-hint">Loading...</p>
+  } @else if (bootstrap()) {
+    <!-- ===== APPS ===== -->
+    @if (currentSection() === 'apps') {
+      <div class="page-header">
+        <h2>Applications</h2>
+        <div class="page-header-actions">
+          <span class="count-badge">{{ bootstrap()!.apps.length }}</span>
+          <a routerLink="/admin/apps/create" class="btn-create" style="background:var(--primary);color:#fff;text-decoration:none;border-radius:var(--radius);display:inline-flex;align-items:center;padding:0 12px;min-height:32px;font-size:12px;font-weight:600;">+ Create</a>
+        </div>
+      </div>
+      @if (bootstrap()!.apps.length === 0) {
+        <div class="surface-card"><p class="empty-hint">No applications registered yet.</p></div>
+      } @else {
+        <div class="table-shell">
+          <table class="data-table">
+            <thead><tr><th>Application</th><th>Client ID</th><th>Scopes</th><th>Redirect URI</th><th>PKCE</th><th>Actions</th></tr></thead>
+            <tbody>
+              @for (app of bootstrap()!.apps; track app.id) {
+                <tr>
+                  <td>
+                    <a [routerLink]="'/admin/apps/' + app.clientId" class="app-cell table-link">
+                      <img [src]="app.logoUrl || '/assets/default-app-logo.svg'" alt="" class="app-logo">
+                      <strong>{{ app.clientName || app.clientId }}</strong>
+                    </a>
+                  </td>
+                  <td class="mono">{{ app.clientId }}</td>
+                  <td><span class="pill">{{ app.scopes.join(', ') }}</span></td>
+                  <td class="mono" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;">{{ app.redirectUris[0] }}</td>
+                  <td><span class="status-pill" [class.status-ok]="app.requirePkce" [class.status-neutral]="!app.requirePkce">{{ app.requirePkce ? 'Yes' : 'No' }}</span></td>
+                  <td><div class="action-cell"><a [routerLink]="'/admin/apps/' + app.clientId" class="ghost-action" style="text-decoration:none;">Edit</a><button type="button" class="ghost-action danger-text" (click)="deleteApp(app.clientId, app.clientName || app.clientId)">Delete</button></div></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    <!-- ===== USERS ===== -->
+    @if (currentSection() === 'users') {
+      <div class="page-header">
+        <h2>Users</h2>
+        <div class="page-header-actions">
+          <span class="count-badge">{{ bootstrap()!.users.length }}</span>
+          <a routerLink="/admin/users/create" class="btn-create" style="background:var(--primary);color:#fff;text-decoration:none;border-radius:var(--radius);display:inline-flex;align-items:center;padding:0 12px;min-height:32px;font-size:12px;font-weight:600;">+ Create</a>
+        </div>
+      </div>
+      @if (bootstrap()!.users.length === 0) {
+        <div class="surface-card"><p class="empty-hint">No users yet.</p></div>
+      } @else {
+        <div class="table-shell">
+          <table class="data-table">
+            <thead><tr><th>Username</th><th>Email</th><th>Status</th><th>Groups</th><th>Actions</th></tr></thead>
+            <tbody>
+              @for (user of bootstrap()!.users; track user.id) {
+                <tr>
+                  <td><a [routerLink]="'/admin/users/' + user.id" class="table-link">{{ user.username }}</a></td>
+                  <td class="mono">{{ user.email }}</td>
+                  <td><span class="status-pill" [class.status-ok]="user.enabled" [class.status-off]="!user.enabled">{{ user.enabled ? 'Enabled' : 'Disabled' }}</span></td>
+                  <td>{{ userGroupNames(user) }}</td>
+                  <td>
+                    <div class="action-cell">
+                      <a [routerLink]="'/admin/users/' + user.id" class="ghost-action" style="text-decoration:none;">Edit</a>
+                      <button type="button" class="ghost-action" (click)="toggleUser(user)">{{ user.enabled ? 'Disable' : 'Enable' }}</button>
+                      <button type="button" class="ghost-action danger-text" (click)="deleteUser(user.id, user.username)">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    <!-- ===== GROUPS ===== -->
+    @if (currentSection() === 'groups') {
+      <div class="page-header">
+        <h2>Groups</h2>
+        <div class="page-header-actions">
+          <span class="count-badge">{{ bootstrap()!.groups.length }}</span>
+          <a routerLink="/admin/groups/create" class="btn-create" style="background:var(--primary);color:#fff;text-decoration:none;border-radius:var(--radius);display:inline-flex;align-items:center;padding:0 12px;min-height:32px;font-size:12px;font-weight:600;">+ Create</a>
+        </div>
+      </div>
+      @if (bootstrap()!.groups.length === 0) {
+        <div class="surface-card"><p class="empty-hint">No groups yet.</p></div>
+      } @else {
+        <div class="table-shell">
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Description</th><th>Members</th><th>Actions</th></tr></thead>
+            <tbody>
+              @for (group of bootstrap()!.groups; track group.id) {
+                <tr>
+                  <td><a [routerLink]="'/admin/groups/' + group.id" class="table-link">{{ group.name }}</a></td>
+                  <td>{{ group.description || '-' }}</td>
+                  <td>{{ group.memberCount }}</td>
+                  <td>
+                    <div class="action-cell">
+                      <a [routerLink]="'/admin/groups/' + group.id" class="ghost-action" style="text-decoration:none;">Edit</a>
+                      <button type="button" class="ghost-action danger-text" (click)="deleteGroup(group.id, group.name)">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    <!-- ===== INTEGRATION ===== -->
+    @if (currentSection() === 'integration') {
+      <div class="page-header">
+        <h2>Integration</h2>
+        <div class="page-header-actions">
+          <a class="ghost-action" href="/api/oidc/endpoints" target="_blank" rel="noreferrer" style="text-decoration:none;">Open JSON</a>
+        </div>
+      </div>
+      <div class="surface-card">
+        <div class="card-head"><h3>Connection metadata</h3></div>
+        <div class="info-list">
+          <div class="info-row"><span>Base URL</span><span class="mono">{{ bootstrap()!.issuer }}</span></div>
+          <div class="info-row"><span>Discovery</span><span class="mono">{{ bootstrap()!.issuer }}/.well-known/openid-configuration</span></div>
+        </div>
+      </div>
+      <div class="table-shell">
+        <table class="data-table">
+          <thead><tr><th>Endpoint</th><th>URL</th></tr></thead>
+          <tbody>
+            <tr><td>Authorization</td><td class="mono">{{ bootstrap()!.issuer }}/oauth2/authorize</td></tr>
+            <tr><td>Token</td><td class="mono">{{ bootstrap()!.issuer }}/oauth2/token</td></tr>
+            <tr><td>JWKS</td><td class="mono">{{ bootstrap()!.issuer }}/oauth2/jwks</td></tr>
+            <tr><td>UserInfo</td><td class="mono">{{ bootstrap()!.issuer }}/userinfo</td></tr>
+            <tr><td>Introspect</td><td class="mono">{{ bootstrap()!.issuer }}/oauth2/introspect</td></tr>
+            <tr><td>Revoke</td><td class="mono">{{ bootstrap()!.issuer }}/oauth2/revoke</td></tr>
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- ===== ROLES ===== -->
+    @if (currentSection() === 'roles') {
+      <div class="page-header"><h2>Roles</h2></div>
+      <div class="surface-card" style="max-width:500px;">
+        <div class="card-head"><h3>Create role</h3></div>
+        <form class="stack-form" (ngSubmit)="createRole()">
+          <label>Name</label>
+          <input [(ngModel)]="newRole.name" name="name" required placeholder="e.g. editor">
+          <label>Description</label>
+          <input [(ngModel)]="newRole.description" name="description" placeholder="Optional">
+          <button type="submit">Create</button>
+        </form>
+      </div>
+      @if (roles().length === 0) {
+        <div class="surface-card"><p class="empty-hint">No roles yet.</p></div>
+      } @else {
+        <div class="table-shell">
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Description</th><th>Created</th><th>Actions</th></tr></thead>
+            <tbody>
+              @for (role of roles(); track role.id) {
+                <tr>
+                  <td><strong>{{ role.name }}</strong></td>
+                  <td>{{ role.description || '-' }}</td>
+                  <td>{{ role.createdAt | date:'mediumDate' }}</td>
+                  <td><button type="button" class="ghost-action danger-text" (click)="deleteRole(role.id, role.name)">Delete</button></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    <!-- ===== SESSIONS ===== -->
+    @if (currentSection() === 'sessions') {
+      <div class="page-header"><h2>Active Sessions</h2></div>
+      @if (sessions().length === 0) {
+        <div class="surface-card"><p class="empty-hint">No active sessions.</p></div>
+      } @else {
+        <div class="table-shell">
+          <table class="data-table">
+            <thead><tr><th>User</th><th>Grant Type</th><th>Issued</th><th>Expires</th><th>Actions</th></tr></thead>
+            <tbody>
+              @for (s of sessions(); track s.id) {
+                <tr>
+                  <td><strong>{{ s.username }}</strong></td>
+                  <td>{{ s.grantType }}</td>
+                  <td>{{ s.issuedAt | date:'medium' }}</td>
+                  <td>{{ s.expiresAt | date:'medium' }}</td>
+                  <td>
+                    <div class="action-cell">
+                      <button type="button" class="ghost-action danger-text" (click)="revokeSession(s.id)">Revoke</button>
+                      <button type="button" class="ghost-action danger-text" (click)="revokeUserSessions(s.username)">Revoke all</button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    <!-- ===== AUDIT LOG ===== -->
+    @if (currentSection() === 'audit') {
+      <div class="page-header"><h2>Audit Log</h2></div>
+      @if (auditLog().length === 0) {
+        <div class="surface-card"><p class="empty-hint">No events recorded yet.</p></div>
+      } @else {
+        <div class="table-shell">
+          <table class="data-table">
+            <thead><tr><th>Time</th><th>Event</th><th>User</th><th>Target</th><th>Detail</th><th>IP</th></tr></thead>
+            <tbody>
+              @for (e of auditLog(); track e.id) {
+                <tr>
+                  <td>{{ e.createdAt | date:'medium' }}</td>
+                  <td><span class="pill">{{ e.eventType }}</span></td>
+                  <td>{{ e.username || '-' }}</td>
+                  <td>{{ e.targetId || '-' }}</td>
+                  <td>{{ e.detail || '-' }}</td>
+                  <td class="mono">{{ e.ipAddress || '-' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  }

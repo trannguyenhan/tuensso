@@ -1,0 +1,171 @@
+@if (loading()) {
+  <p class="empty-hint">Loading...</p>
+} @else {
+  @if (message()) {
+    <div class="message-banner success">{{ message() }}</div>
+  }
+  @if (error()) {
+    <div class="message-banner error">{{ error() }}</div>
+  }
+
+  <div class="page-header">
+    <div>
+      <a routerLink="/admin/apps" class="back-link">&larr; Applications</a>
+      <h2>{{ isCreate ? 'Create Application' : (app()?.clientName || app()?.clientId) }}</h2>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <!-- Left: Settings -->
+    <section class="surface-card">
+      <div class="card-head"><h3>{{ isCreate ? 'Client settings' : 'Settings' }}</h3></div>
+      <form class="stack-form" (ngSubmit)="save()">
+        <label>Client ID</label>
+        @if (isCreate) {
+          <div class="input-with-action">
+            <input [(ngModel)]="form.clientId" name="clientId" required class="mono">
+            <button type="button" class="icon-btn" title="Regenerate" (click)="regenerateId()">&#x21bb;</button>
+            <button type="button" class="icon-btn" title="Copy" (click)="copyToClipboard(form.clientId)">&#x2398;</button>
+          </div>
+        } @else {
+          <div class="input-with-action">
+            <input [value]="app()!.clientId" readonly disabled class="mono">
+            <button type="button" class="icon-btn" title="Copy" (click)="copyToClipboard(app()!.clientId)">&#x2398;</button>
+          </div>
+        }
+
+        <label>App name</label>
+        <input [(ngModel)]="form.clientName" name="clientName" placeholder="Human-readable name">
+
+        @if (isCreate) {
+          <label>Client secret</label>
+          <div class="input-with-action">
+            <input [(ngModel)]="form.clientSecret" name="clientSecret" required class="mono">
+            <button type="button" class="icon-btn" title="Regenerate" (click)="regenerateSecret()">&#x21bb;</button>
+            <button type="button" class="icon-btn" title="Copy" (click)="copyToClipboard(form.clientSecret)">&#x2398;</button>
+          </div>
+        }
+
+        <label>Redirect URIs <span class="label-hint">(one per line)</span></label>
+        <textarea [(ngModel)]="form.redirectUris" name="redirectUris" rows="3" required></textarea>
+
+        <label>Scopes <span class="label-hint">(comma-separated)</span></label>
+        <input [(ngModel)]="form.scopes" name="scopes">
+
+        <label class="checkbox-row">
+          <input type="checkbox" [(ngModel)]="form.requirePkce" name="requirePkce">
+          <span>Require PKCE</span>
+        </label>
+
+        <button type="submit" [disabled]="saving()">{{ isCreate ? (saving() ? 'Creating...' : 'Create application') : (saving() ? 'Saving...' : 'Save changes') }}</button>
+      </form>
+    </section>
+
+    <!-- Right: Branding -->
+    <div class="detail-right-stack">
+      @if (!isCreate && app()) {
+        <section class="surface-card">
+          <div class="card-head"><h3>Logo</h3></div>
+          <div class="logo-preview">
+            <img [src]="app()!.logoUrl || '/assets/default-app-logo.svg'" alt="" class="logo-large">
+          </div>
+          <div class="stack-form">
+            <label class="file-button">
+              <span>Select logo</span>
+              <input type="file" accept=".png,.jpg,.jpeg,.webp,.svg" (change)="onLogoSelected($event)">
+            </label>
+            <button type="button" class="ghost-action" (click)="uploadLogo()">Upload</button>
+          </div>
+        </section>
+      }
+
+      @if (!isCreate) {
+        <section class="surface-card">
+          <div class="card-head"><h3>Branding</h3></div>
+          <div class="stack-form">
+            <label>Primary color</label>
+            <div class="color-picker-row">
+              <input type="color" [(ngModel)]="form.primaryColor" name="primaryColor" class="color-input">
+              <input [(ngModel)]="form.primaryColor" name="primaryColorText" class="mono" style="flex:1;" maxlength="7">
+            </div>
+          </div>
+        </section>
+      }
+
+      <!-- Login Preview -->
+      <section class="surface-card">
+        <div class="card-head"><h3>Login preview</h3></div>
+        <div class="login-preview" [style.border-color]="previewColor">
+          <div class="lp-inner">
+            <img [src]="previewLogo" alt="" class="lp-logo">
+            <div class="lp-title">Sign in to <strong>{{ previewName }}</strong></div>
+            <div class="lp-field"></div>
+            <div class="lp-field"></div>
+            <div class="lp-btn" [style.background]="previewColor">Sign in</div>
+            <div class="lp-footer">Powered by TuenSSO</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- User Assignment (edit mode only) -->
+  @if (!isCreate && app()) {
+    <section class="surface-card" style="margin-top:16px;">
+      <div class="card-head inline-head">
+        <h3>Assigned users</h3>
+        <span class="count-badge">{{ assignedUsers().length }}</span>
+      </div>
+
+      @if (assignedUsers().length === 0) {
+        <p class="empty-hint">No users assigned. All users can access this app by default.</p>
+      } @else {
+        <div class="table-shell">
+          <table class="data-table">
+            <thead><tr><th>Username</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              @for (user of assignedUsers(); track user.id) {
+                <tr>
+                  <td><a [routerLink]="'/admin/users/' + user.id" class="table-link">{{ user.username }}</a></td>
+                  <td class="mono">{{ user.email }}</td>
+                  <td><span class="status-pill" [class.status-ok]="user.enabled" [class.status-off]="!user.enabled">{{ user.enabled ? 'Enabled' : 'Disabled' }}</span></td>
+                  <td><button type="button" class="ghost-action danger-text" (click)="removeUser(user.id)">Remove</button></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      @if (availableUsers().length > 0) {
+        <div class="assign-inline" style="margin-top:12px;">
+          <select [(ngModel)]="selectedUserId">
+            <option value="" disabled>Select user to add...</option>
+            @for (u of availableUsers(); track u.id) {
+              <option [value]="u.id">{{ u.username }} ({{ u.email }})</option>
+            }
+          </select>
+          <button type="button" class="ghost-action" (click)="addUser()">Add user</button>
+        </div>
+      }
+
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button type="button" class="ghost-action" (click)="showCreateUser = !showCreateUser">
+          {{ showCreateUser ? 'Cancel' : '+ Create & assign user' }}
+        </button>
+      </div>
+
+      @if (showCreateUser) {
+        <div class="stack-form" style="margin-top:12px;max-width:400px;">
+          <label>Username <span class="label-hint">(optional, defaults to email prefix)</span></label>
+          <input [(ngModel)]="newUserForm.username" placeholder="john">
+          <label>Email</label>
+          <input [(ngModel)]="newUserForm.email" type="email" placeholder="john@example.com" required>
+          <label>Password <span class="label-hint">(default: changeme)</span></label>
+          <input [(ngModel)]="newUserForm.password" type="password" placeholder="changeme">
+          <button type="button" (click)="createUser()">Create & assign</button>
+        </div>
+      }
+    </section>
+  }
+}
