@@ -65,7 +65,7 @@ public class SecurityConfig {
 
     // -----------------------------------------------------------------------
     // Filter chain 2 — Login form + Admin API
-    // /admin/** yeu cau ROLE_ADMIN
+    // /admin/** requires ROLE_ADMIN
     // -----------------------------------------------------------------------
     @Bean
     @Order(2)
@@ -98,7 +98,7 @@ public class SecurityConfig {
     }
 
     // -----------------------------------------------------------------------
-    // Registered clients — luu DB, quan ly qua /admin/clients API
+    // Registered clients — stored in DB, managed via /api/admin/clients API
     // -----------------------------------------------------------------------
     @Bean
     RegisteredClientRepository registeredClientRepository(DataSource dataSource) {
@@ -106,7 +106,7 @@ public class SecurityConfig {
     }
 
     // -----------------------------------------------------------------------
-    // Authorization + Consent service — luu DB
+    // Authorization + Consent service — stored in DB
     // -----------------------------------------------------------------------
     @Bean
     OAuth2AuthorizationService authorizationService(DataSource dataSource,
@@ -160,7 +160,7 @@ public class SecurityConfig {
     }
 
     // -----------------------------------------------------------------------
-    // RSA key de ky JWT — TODO Phase 2: load tu file / KMS
+    // RSA key for signing JWT — TODO Phase 2: load from file / KMS
     // -----------------------------------------------------------------------
     @Bean
     JWKSource<SecurityContext> jwkSource() {

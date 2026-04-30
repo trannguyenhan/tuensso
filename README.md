@@ -1,11 +1,11 @@
 # TuenSSO
 
-SSO server doc lap viet bang Java, cung cap dich vu OpenID Connect cho cac ung dung khac.
-Thay the Keycloak voi codebase gon nhe, hoan toan kiem soat duoc.
+Standalone SSO server written in Java, providing OpenID Connect services for other applications.
+A lightweight, fully controllable replacement for Keycloak.
 
 ---
 
-## Kien truc
+## Architecture
 
 ```
 App A  --OIDC-->
@@ -13,135 +13,142 @@ App B  --OIDC-->  TuenSSO :8080
 App C  --OIDC-->
 ```
 
-TuenSSO dong vai tro Identity Provider. Cac app chi can cau hinh OIDC client
-tro vao TuenSSO la dang nhap duoc, khong can biet TuenSSO duoc viet bang gi.
+TuenSSO acts as an Identity Provider. Apps only need to configure an OIDC client
+pointing to TuenSSO to enable login — no knowledge of TuenSSO internals required.
 
 ---
 
-## Cong nghe
+## Tech Stack
 
 - Java 21
 - Spring Boot 3.3.4
 - Spring Authorization Server 1.3.2
 - Spring Security 6
 - Spring Data JPA + Flyway
-- H2 (dev) / PostgreSQL (production)
+- PostgreSQL (production) / H2 (dev)
 - Angular 18 (SPA frontend)
 
 ---
 
-## Cach chay
+## Getting Started
 
-### Yeu cau
+### Prerequisites
 
 - Java 21
 - Maven 3.9+
-- Co internet o lan chay dau tien de Maven tai Node/NPM cho frontend
+- Internet access on first run (Maven downloads Node/NPM for frontend build)
 
-### Cach 1: Chay dev nhanh (khuyen dung)
+### Option 1: Quick dev run (recommended)
 
 ```bash
 mvn spring-boot:run
 ```
 
-Lenh nay se:
+This will:
 
-- Build frontend Angular
-- Copy frontend vao classpath resource
-- Chay Spring Boot ngay tren cung mot process
+- Build the Angular frontend
+- Copy frontend into classpath resources
+- Start Spring Boot in a single process
 
-### Cach 2: Build artifact roi chay
+### Option 2: Build artifact then run
 
 ```bash
 mvn clean package
 java -jar target/tuensso-0.0.1-SNAPSHOT.jar
 ```
 
-Neu port 8080 dang ban, dung port khac:
+If port 8080 is busy, use a different port:
 
 ```bash
 java -jar target/tuensso-0.0.1-SNAPSHOT.jar --server.port=8081
 ```
 
-### URL va tai khoan mac dinh
+### URLs and Default Accounts
 
-- Ung dung: http://localhost:8080
+- Application: http://localhost:8080
 - OIDC discovery: http://localhost:8080/.well-known/openid-configuration
-- Tai khoan demo: admin/123456, user/123456
+- Demo accounts: admin/123456, user/123456
 
 ---
 
-## OIDC Endpoints (de app ngoai ket noi)
+## OIDC Endpoints (for client apps)
 
-| Endpoint                            | Mo ta                                        |
-|-------------------------------------|----------------------------------------------|
-| GET /.well-known/openid-configuration | Discovery — app doc de tu cau hinh          |
-| GET /oauth2/authorize               | Bat dau luong dang nhap (redirect)           |
-| POST /oauth2/token                  | Doi authorization code lay access/id token  |
-| GET /userinfo                       | Lay thong tin user tu access token          |
-| GET /oauth2/jwks                    | Public key de app tu verify JWT             |
-| POST /oauth2/introspect             | Kiem tra token con hop le khong             |
-| POST /oauth2/revoke                 | Thu hoi token                               |
-| GET /connect/logout                 | Logout                                      |
+| Endpoint                              | Description                                  |
+|---------------------------------------|----------------------------------------------|
+| GET /.well-known/openid-configuration | Discovery — apps read this to auto-configure |
+| GET /oauth2/authorize                 | Start login flow (redirect)                  |
+| POST /oauth2/token                    | Exchange authorization code for tokens       |
+| GET /userinfo                         | Get user info from access token              |
+| GET /oauth2/jwks                      | Public keys for JWT verification             |
+| POST /oauth2/introspect               | Check if token is still valid                |
+| POST /oauth2/revoke                   | Revoke a token                               |
+| GET /connect/logout                   | Logout                                       |
 
 ---
 
 ## Admin REST API
 
-Yeu cau dang nhap bang tai khoan co ROLE_ADMIN.
+Requires login with a ROLE_ADMIN account.
 
-### Quan ly clients
-
-```
-POST   /admin/clients              Dang ky OIDC client moi
-GET    /admin/clients/{clientId}   Xem thong tin client
-```
-
-Vi du dang ky client:
-
-```bash
-curl -u admin:123456 -X POST http://localhost:8080/admin/clients \
-  -H "Content-Type: application/json" \
-  -d '{
-    "clientId": "myapp",
-    "clientSecret": "my-secret",
-    "redirectUris": ["http://localhost:3000/callback"],
-    "scopes": ["openid", "profile", "email"],
-    "requirePkce": false
-  }'
-```
-
-### Quan ly users
+### Client Management
 
 ```
-GET    /admin/users                Danh sach user
-GET    /admin/users/{id}           Xem user
-POST   /admin/users                Tao user moi
-PUT    /admin/users/{id}/enable    Mo khoa user
-PUT    /admin/users/{id}/disable   Khoa user
-PUT    /admin/users/{id}/password  Doi mat khau
-DELETE /admin/users/{id}           Xoa user
+POST   /api/admin/clients              Register new OIDC client
+GET    /api/admin/clients/{clientId}    View client details
+PUT    /api/admin/clients/{clientId}    Update client
+DELETE /api/admin/clients/{clientId}    Delete client
 ```
 
-Vi du tao user:
+### User Management
 
-```bash
-curl -u admin:123456 -X POST http://localhost:8080/admin/users \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "alice",
-    "email": "alice@example.com",
-    "password": "securepassword"
-  }'
+```
+GET    /api/admin/users                List users
+GET    /api/admin/users/{id}           View user
+POST   /api/admin/users                Create user
+PUT    /api/admin/users/{id}           Update user
+PUT    /api/admin/users/{id}/enable    Enable user
+PUT    /api/admin/users/{id}/disable   Disable user
+PUT    /api/admin/users/{id}/password  Change password
+DELETE /api/admin/users/{id}           Delete user
+```
+
+### Group Management
+
+```
+GET    /api/admin/groups               List groups
+POST   /api/admin/groups               Create group
+DELETE /api/admin/groups/{id}          Delete group
+POST   /api/admin/groups/{id}/members/{userId}    Add user to group
+DELETE /api/admin/groups/{id}/members/{userId}    Remove user from group
+```
+
+### Role Management
+
+```
+GET    /api/admin/roles                List roles
+POST   /api/admin/roles                Create role
+DELETE /api/admin/roles/{id}           Delete role
+POST   /api/admin/roles/{roleId}/users/{userId}   Assign role to user
+DELETE /api/admin/roles/{roleId}/users/{userId}   Remove role from user
+GET    /api/admin/roles/user/{userId}  View user's roles
+```
+
+### Sessions & Audit
+
+```
+GET    /api/admin/sessions             List active sessions
+DELETE /api/admin/sessions/{id}        Revoke session
+DELETE /api/admin/sessions/user/{username}  Revoke all sessions for user
+GET    /api/admin/audit                Activity log (paginated)
 ```
 
 ---
 
-## Cach tich hop vao ung dung khac
+## Integration Guide
 
 ### Spring Boot app
 
-Them dependency:
+Add dependency:
 
 ```xml
 <dependency>
@@ -150,7 +157,7 @@ Them dependency:
 </dependency>
 ```
 
-Cau hinh application.yml:
+Configure application.yml:
 
 ```yaml
 spring:
@@ -168,9 +175,9 @@ spring:
             issuer-uri: http://localhost:8080
 ```
 
-### Bat ky ung dung nao ho tro OIDC
+### Any OIDC-compatible application
 
-Su dung thong tin sau:
+Use the following endpoints:
 
 ```
 Issuer URI:             http://localhost:8080
@@ -182,58 +189,92 @@ UserInfo URI:           http://localhost:8080/userinfo
 
 ---
 
-## Cau truc source
+## JWT Claims
 
-```
-src/main/java/com/tuensso/
-  TuenSsoApplication.java          Entry point
-  config/
-    SecurityConfig.java            Filter chains, OIDC, security rules
-  admin/
-    ClientAdminController.java     REST API quan ly OIDC clients
-    UserAdminController.java       REST API quan ly users
-  user/
-    UserAccount.java               Entity user
-    UserAccountRepository.java     JPA repository
-  web/
-    HomeController.java            Trang chu, trang login
+Tokens issued to client apps include:
 
-src/main/resources/
-  application.yml                  Cau hinh chinh
-  db/migration/
-    V1__init_schema.sql            Bang users
-    V2__oauth2_schema.sql          Bang oauth2_registered_client, authorization
-  static/assets/
-    ...                            Static resource backend
-
-frontend/
-  src/                             Angular source code
-  angular.json                     Angular build config
-  package.json                     Frontend scripts/dependencies
-
-target/generated-resources/frontend/browser/
-  ...                              Frontend build output duoc Maven dua vao classpath
+```json
+{
+  "sub": "username",
+  "email": "user@example.com",
+  "preferred_username": "username",
+  "name": "username",
+  "groups": ["admins", "developers"],
+  "roles": ["editor", "viewer"]
+}
 ```
 
 ---
 
-## Chuyen sang PostgreSQL (production)
+## Source Structure
 
-1. Sua `application.yml`:
+```
+src/main/java/com/tuensso/
+  TuenSsoApplication.java              Entry point
+  config/
+    SecurityConfig.java                 Filter chains, OIDC, security rules
+    BootstrapDataConfig.java            Seed data (dev profile only)
+    TokenCustomizerConfig.java          JWT claims customization
+    SsoLoginEntryPoint.java             Redirect to SSO login page
+  admin/
+    ClientAdminController.java          REST API for OIDC client management
+    UserAdminController.java            REST API for user management
+    GroupAdminController.java           REST API for group management
+    RoleAdminController.java            REST API for role management
+    SessionAdminController.java         REST API for session management
+    AuditLogAdminController.java        REST API for audit log
+    AdminConsoleApiController.java      Bootstrap API for admin console
+  audit/
+    AuditLog.java                       Audit log entity
+    AuditLogRepository.java             JPA repository
+    AuditService.java                   Audit logging service
+    AuthEventListener.java              Login success/failure event listener
+  role/
+    Role.java                           Role entity
+    RoleRepository.java                 JPA repository
+  user/
+    UserAccount.java                    User entity
+    UserAccountRepository.java          JPA repository
+    DbUserDetailsService.java           Load users from DB for Spring Security
+  client/
+    OidcClientService.java              OIDC client management service
+    AppLogoStorageService.java          Application logo storage
+  group/
+    UserGroup.java                      Group entity
+    UserGroupRepository.java            JPA repository
+  web/
+    HomeController.java                 SPA routing (forward to index.html)
+    AuthApiController.java              Session/CSRF API
+    BrandingApiController.java          Login page branding API
+    SsoLogoutController.java            SSO logout API
+    UserProfileApiController.java       User profile API
+    AppLogoController.java              Logo file serving
+    OidcMetadataController.java         OIDC metadata API
+
+frontend/
+  src/                                  Angular source code
+  angular.json                          Angular build config
+  package.json                          Frontend dependencies
+```
+
+---
+
+## Switching to PostgreSQL (production)
+
+1. Edit `application.yml`:
 
 ```yaml
 spring:
+  profiles:
+    active: prod
   datasource:
     url: jdbc:postgresql://localhost:5432/tuensso
     username: tuensso
-    password: your-password
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
-  jpa:
-    hibernate:
-      ddl-auto: validate
 ```
 
-2. Them dependency vao `pom.xml`:
+2. Add dependency to `pom.xml`:
 
 ```xml
 <dependency>
@@ -245,11 +286,28 @@ spring:
 
 ---
 
-## Phat trien tiep theo (Phase 2)
+## Completed Features
 
-- [ ] JPA UserDetailsService (load user tu DB thay vi in-memory)
-- [ ] Luu RSA key ra file / KMS (tranh mat key khi restart)
-- [ ] Admin UI Thymeleaf (thay vi goi API thu cong)
-- [ ] Role trong JWT claim (de app ngoai phan quyen theo role)
-- [ ] Docker Compose (TuenSSO + PostgreSQL)
+- [x] OIDC Authorization Code + Refresh Token flow
+- [x] Admin Console UI (Angular SPA)
+- [x] Application management (CRUD, logo, branding, primary color)
+- [x] User management (CRUD, enable/disable, password reset)
+- [x] Group management + user-group assignment
+- [x] Role management + user-role assignment
+- [x] Roles & Groups in JWT claims
+- [x] SSO Login with per-app branding
+- [x] SSO Logout with confirmation page
+- [x] User profile page (view/edit email, change password)
+- [x] Session management (view/revoke active sessions)
+- [x] Audit log (login events, user/client CRUD, password changes)
+- [x] PKCE support
+- [x] Docker + Docker Compose
+
+## Roadmap
+
+- [ ] Persist RSA keys to file / KMS (prevent key loss on restart)
+- [ ] Forgot password + email delivery
+- [ ] Account lockout after N failed login attempts
+- [ ] 2FA/MFA (TOTP)
+- [ ] Consent screen
 - [ ] HTTPS / Reverse proxy guide

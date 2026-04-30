@@ -1,20 +1,20 @@
-# TuenSSO — Hướng dẫn chạy Demo
+# TuenSSO — Demo Guide
 
-## 1. Khởi động TuenSSO
+## 1. Start TuenSSO
 
 ```bash
 mvn spring-boot:run
 ```
 
-Mở http://localhost:8080 → đăng nhập với `admin / 123456`
+Open http://localhost:8080 → sign in with `admin / 123456`
 
 ---
 
-## 2. Đăng ký 2 OIDC client cho demo
+## 2. Register 2 OIDC clients for demo
 
-### Cách 1: Qua Admin UI
+### Option 1: Via Admin UI
 
-Vào http://localhost:8080/apps → **+ Create** → điền thông tin:
+Go to http://localhost:8080/admin/apps → **+ Create** → fill in:
 
 | Field | App 1 | App 2 |
 |-------|-------|-------|
@@ -25,12 +25,12 @@ Vào http://localhost:8080/apps → **+ Create** → điền thông tin:
 | Scopes | `openid, profile, email` | `openid, profile, email` |
 | Require PKCE | ☐ | ☐ |
 
-Sau khi tạo, vào edit từng app để chọn **logo**, **màu chủ đạo** và xem **Login preview**.
+After creating, edit each app to set **logo**, **primary color** and preview the **Login page**.
 
-### Cách 2: Qua API
+### Option 2: Via API
 
 ```bash
-curl -u admin:123456 -X POST http://localhost:8080/admin/clients \
+curl -u admin:123456 -X POST http://localhost:8080/api/admin/clients \
   -H "Content-Type: application/json" \
   -d '{
     "clientId": "demo-app1",
@@ -41,7 +41,7 @@ curl -u admin:123456 -X POST http://localhost:8080/admin/clients \
     "requirePkce": false
   }'
 
-curl -u admin:123456 -X POST http://localhost:8080/admin/clients \
+curl -u admin:123456 -X POST http://localhost:8080/api/admin/clients \
   -H "Content-Type: application/json" \
   -d '{
     "clientId": "demo-app2",
@@ -55,18 +55,18 @@ curl -u admin:123456 -X POST http://localhost:8080/admin/clients \
 
 ---
 
-## 3. Chạy Demo App 1 (Spring Boot — port 8081)
+## 3. Run Demo App 1 (Spring Boot — port 8081)
 
 ```bash
 cd demo/app1
 mvn spring-boot:run
 ```
 
-Mở http://127.0.0.1:8081 → tự redirect sang TuenSSO login → đăng nhập → xem user info JSON.
+Open http://127.0.0.1:8081 → auto-redirects to TuenSSO login → sign in → view user info JSON.
 
 ---
 
-## 4. Chạy Demo App 2 (Node.js/Express — port 8082)
+## 4. Run Demo App 2 (Node.js/Express — port 8082)
 
 ```bash
 cd demo/app2
@@ -74,58 +74,69 @@ npm install
 npm start
 ```
 
-Mở http://localhost:8082 → click **Login with TuenSSO** → đăng nhập → xem user info.
+Open http://localhost:8082 → click **Login with TuenSSO** → sign in → view user info.
 
 ---
 
-## 5. Kiểm tra các tính năng
+## 5. Feature Walkthrough
 
-### Trang Login có branding
+### Branded Login Page
 
-Khi app redirect sang TuenSSO, URL sẽ có `?client_id=demo-app1`. Trang login sẽ hiển thị:
-- Logo của app (nếu đã upload)
-- Tên app ("Sign in to continue to **Demo App 1**")
-- Nút Sign in theo màu chủ đạo của app
+When an app redirects to TuenSSO, the URL includes `?client_id=demo-app1`. The login page shows:
+- App logo (if uploaded)
+- App name ("Sign in to **Demo App 1**")
+- Sign in button in the app's primary color
 
-Test trực tiếp: http://localhost:8080/login?client_id=demo-app1
+Direct test: http://localhost:8080/sso-login?client_id=demo-app1
 
 ### Admin Console (admin / 123456)
 
-| Trang | URL | Mô tả |
-|-------|-----|-------|
-| Dashboard | /dashboard | Thống kê apps, users, groups |
-| Applications | /apps | Danh sách OIDC clients |
-| Create App | /apps/create | Tạo client mới |
-| Edit App | /apps/{clientId} | Chỉnh sửa, upload logo, chọn màu, preview login |
-| Users | /users | Danh sách users |
-| Create User | /users/create | Tạo user mới |
-| Edit User | /users/{id} | Sửa profile, reset password, enable/disable, quản lý groups |
-| Groups | /groups | Danh sách groups |
-| Integration | /integration | OIDC endpoints reference |
-| Documentation | /docs | Hướng dẫn sử dụng, deploy, API |
+| Page | URL | Description |
+|------|-----|-------------|
+| Dashboard | /admin/dashboard | Stats: apps, users, groups |
+| Applications | /admin/apps | OIDC client list |
+| Create App | /admin/apps/create | Register new client |
+| Edit App | /admin/apps/{clientId} | Edit, upload logo, set color, preview login |
+| Users | /admin/users | User list |
+| Create User | /admin/users/create | Create new user |
+| Edit User | /admin/users/{id} | Edit profile, reset password, enable/disable, manage groups & roles |
+| Groups | /admin/groups | Group list |
+| Roles | /admin/roles | Role management |
+| Sessions | /admin/sessions | Active sessions, revoke |
+| Audit Log | /admin/audit | Activity log |
+| Integration | /admin/integration | OIDC endpoints reference |
+| Documentation | /admin/docs | Usage guide, deploy, API |
 
-### Trang User Profile (user / 123456)
+### User Profile (user / 123456)
 
-Đăng nhập với tài khoản `user / 123456` → tự redirect sang http://localhost:8080/account
+Sign in with `user / 123456` → auto-redirects to http://localhost:8080/account
 
-Hiển thị: username, email, status, groups, ngày tạo.
+Shows: username, email, status, groups, member since. Click **Edit** to change email.
 
-### Branding per-app
+### Per-app Branding
 
-1. Vào http://localhost:8080/apps → click **Edit** trên một app
-2. Phần **Branding**: chọn màu bằng color picker
-3. Phần **Logo**: upload logo
-4. Phần **Login preview**: xem live preview trang login
+1. Go to http://localhost:8080/admin/apps → click **Edit** on an app
+2. **Branding**: pick a color with the color picker
+3. **Logo**: upload a logo image
+4. **Login preview**: see live preview
 5. Click **Save changes**
-6. Mở http://localhost:8080/login?client_id={clientId} để xem kết quả
+6. Open http://localhost:8080/sso-login?client_id={clientId} to see the result
+
+### SSO Logout
+
+Apps can redirect users to:
+```
+http://localhost:8080/sso-logout?client_id=demo-app1&redirect_uri=http://localhost:8081/
+```
+User sees a confirmation page → clicks **Sign out** → SSO session ends → redirects back to app.
 
 ---
 
-## 6. Tài khoản mặc định
+## 6. Default Accounts
 
-| Username | Password | Role | Sau đăng nhập |
-|----------|----------|------|---------------|
-| admin | 123456 | ROLE_ADMIN | → /dashboard (Admin Console) |
+| Username | Password | Role | After login |
+|----------|----------|------|-------------|
+| admin | 123456 | ROLE_ADMIN | → /admin/dashboard (Admin Console) |
 | user | 123456 | ROLE_USER | → /account (User Profile) |
 
 ---
@@ -145,10 +156,10 @@ Hiển thị: username, email, status, groups, ngày tạo.
 ## 8. Docker
 
 ```bash
-# Build & run với H2 (dev)
+# Build & run with H2 (dev)
 docker build -t tuensso .
 docker run -p 8080:8080 tuensso
 
-# Hoặc dùng docker-compose với PostgreSQL
+# Or use docker-compose with PostgreSQL
 docker compose up --build
 ```

@@ -1,7 +1,7 @@
--- Them cot password_hash vao users
+-- Add password_hash column to users table
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);
 
--- Bang oauth2_registered_client chuan cua Spring Authorization Server
+-- Standard Spring Authorization Server oauth2_registered_client table
 CREATE TABLE IF NOT EXISTS oauth2_registered_client (
     id                            VARCHAR(100) NOT NULL,
     client_id                     VARCHAR(100) NOT NULL UNIQUE,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS oauth2_registered_client (
     PRIMARY KEY (id)
 );
 
--- Bang oauth2_authorization chuan cua Spring Authorization Server
+-- Standard Spring Authorization Server oauth2_authorization table
 CREATE TABLE IF NOT EXISTS oauth2_authorization (
     id                            VARCHAR(100) NOT NULL,
     registered_client_id          VARCHAR(100) NOT NULL,
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS oauth2_authorization (
     PRIMARY KEY (id)
 );
 
--- Bang oauth2_authorization_consent
+-- Standard Spring Authorization Server oauth2_authorization_consent table
 CREATE TABLE IF NOT EXISTS oauth2_authorization_consent (
     registered_client_id VARCHAR(100) NOT NULL,
     principal_name       VARCHAR(200) NOT NULL,
