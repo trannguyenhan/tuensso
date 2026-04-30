@@ -48,7 +48,17 @@ export interface UserRow {
   id: string;
   username: string;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  address: string | null;
   enabled: boolean;
+  locked: boolean;
+  failedLoginAttempts: number;
+  lockedUntil: string | null;
+  lastLoginAt: string | null;
+  lastLoginIp: string | null;
+  passwordChangedAt: string | null;
   groups: GroupRef[];
 }
 
@@ -77,7 +87,7 @@ export interface ProfileResponse {
 
 export interface SessionRow {
   id: string; username: string; grantType: string;
-  issuedAt: string; expiresAt: string; clientId: string;
+  issuedAt: string; expiresAt: string | null; clientId: string | null; expired: boolean;
 }
 
 export interface AuditEntry {
@@ -97,6 +107,10 @@ export interface RoleRow {
 export interface ScopeRow {
   id: string; name: string; description: string;
   claimName: string; claimValue: string; createdAt: string;
+}
+
+export interface UserAttributeRow {
+  id: string; userId: string; key: string; value: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -135,6 +149,14 @@ export class ConsoleApiService {
 
   disableUser(userId: string): Observable<unknown> {
     return this.http.put(`/api/admin/users/${userId}/disable`, {});
+  }
+
+  lockUser(userId: string): Observable<unknown> {
+    return this.http.put(`/api/admin/users/${userId}/lock`, {});
+  }
+
+  unlockUser(userId: string): Observable<unknown> {
+    return this.http.put(`/api/admin/users/${userId}/unlock`, {});
   }
 
   resetPassword(userId: string, newPassword: string): Observable<unknown> {
@@ -256,8 +278,21 @@ export class ConsoleApiService {
     return this.http.get<UserRow>(`/api/admin/users/${userId}`);
   }
 
-  updateUser(userId: string, payload: { username: string; email: string; }): Observable<unknown> {
+  updateUser(userId: string, payload: { username: string; email: string;
+    firstName?: string; lastName?: string; phone?: string; address?: string }): Observable<unknown> {
     return this.http.put(`/api/admin/users/${userId}`, payload);
+  }
+
+  getUserAttributes(userId: string): Observable<UserAttributeRow[]> {
+    return this.http.get<UserAttributeRow[]>(`/api/admin/users/${userId}/attributes`);
+  }
+
+  setUserAttribute(userId: string, key: string, value: string): Observable<UserAttributeRow> {
+    return this.http.put<UserAttributeRow>(`/api/admin/users/${userId}/attributes`, { key, value });
+  }
+
+  deleteUserAttribute(userId: string, key: string): Observable<unknown> {
+    return this.http.delete(`/api/admin/users/${userId}/attributes/${key}`);
   }
 
   getGroup(groupId: string): Observable<GroupRow> {

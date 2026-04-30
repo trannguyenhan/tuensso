@@ -32,12 +32,42 @@ public class UserAccount {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
+    @Column(name = "phone")
+    private String phone;
+
+    @Column(name = "address")
+    private String address;
+
     @Column(name = "password_hash")
     @JsonIgnore
     private String passwordHash;
 
     @Column(name = "enabled", nullable = false)
     private boolean enabled = true;
+
+    @Column(name = "locked", nullable = false)
+    private boolean locked = false;
+
+    @Column(name = "failed_login_attempts", nullable = false)
+    private int failedLoginAttempts = 0;
+
+    @Column(name = "locked_until")
+    private Instant lockedUntil;
+
+    @Column(name = "last_login_at")
+    private Instant lastLoginAt;
+
+    @Column(name = "last_login_ip")
+    private String lastLoginIp;
+
+    @Column(name = "password_changed_at")
+    private Instant passwordChangedAt;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -93,6 +123,15 @@ public class UserAccount {
         this.email = email;
     }
 
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
     public String getPasswordHash() {
         return passwordHash;
     }
@@ -112,6 +151,19 @@ public class UserAccount {
     public Instant getCreatedAt() {
         return createdAt;
     }
+
+    public boolean isLocked() { return locked; }
+    public void setLocked(boolean locked) { this.locked = locked; }
+    public int getFailedLoginAttempts() { return failedLoginAttempts; }
+    public void setFailedLoginAttempts(int n) { this.failedLoginAttempts = n; }
+    public Instant getLockedUntil() { return lockedUntil; }
+    public void setLockedUntil(Instant lockedUntil) { this.lockedUntil = lockedUntil; }
+    public Instant getLastLoginAt() { return lastLoginAt; }
+    public void setLastLoginAt(Instant lastLoginAt) { this.lastLoginAt = lastLoginAt; }
+    public String getLastLoginIp() { return lastLoginIp; }
+    public void setLastLoginIp(String lastLoginIp) { this.lastLoginIp = lastLoginIp; }
+    public Instant getPasswordChangedAt() { return passwordChangedAt; }
+    public void setPasswordChangedAt(Instant passwordChangedAt) { this.passwordChangedAt = passwordChangedAt; }
 
     public Set<UserGroup> getGroups() {
         return groups;

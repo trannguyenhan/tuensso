@@ -14,8 +14,8 @@
         <h2>{{ isCreate ? 'Create User' : user()?.username }}</h2>
       </div>
       @if (!isCreate && user()) {
-        <span class="status-pill" [class.status-ok]="user()!.enabled" [class.status-off]="!user()!.enabled">
-          {{ user()!.enabled ? 'Enabled' : 'Disabled' }}
+        <span class="status-pill" [class.status-ok]="user()!.enabled && !user()!.locked" [class.status-off]="!user()!.enabled || user()!.locked">
+          {{ user()!.locked ? 'Locked' : (user()!.enabled ? 'Enabled' : 'Disabled') }}
         </span>
       }
     </div>
@@ -28,6 +28,14 @@
           <input [(ngModel)]="form.username" name="username" autocomplete="off" required>
           <label>Email</label>
           <input [(ngModel)]="form.email" name="email" type="email" autocomplete="off" required>
+          <label>First name</label>
+          <input [(ngModel)]="form.firstName" name="firstName" autocomplete="off">
+          <label>Last name</label>
+          <input [(ngModel)]="form.lastName" name="lastName" autocomplete="off">
+          <label>Phone</label>
+          <input [(ngModel)]="form.phone" name="phone" autocomplete="off">
+          <label>Address</label>
+          <input [(ngModel)]="form.address" name="address" autocomplete="off">
           @if (isCreate) {
             <label>Password</label>
             <input [(ngModel)]="form.password" name="password" type="password" autocomplete="new-password" required>
@@ -47,8 +55,27 @@
             </div>
             <div class="action-row" style="margin-top:8px;">
               <button type="button" class="ghost-action" (click)="toggleEnabled()">{{ user()!.enabled ? 'Disable' : 'Enable' }}</button>
+              <button type="button" class="ghost-action" (click)="toggleLocked()">{{ user()!.locked ? 'Unlock' : 'Lock' }}</button>
               <button type="button" class="ghost-action danger-text" (click)="deleteUser()">Delete</button>
             </div>
+          </div>
+        </section>
+
+        <section class="surface-card">
+          <div class="card-head"><h3>Account info</h3></div>
+          <div class="info-list">
+            <div class="info-row"><span>Status</span><span><span class="status-pill" [class.status-ok]="user()!.enabled" [class.status-off]="!user()!.enabled">{{ user()!.enabled ? 'Enabled' : 'Disabled' }}</span></span></div>
+            <div class="info-row"><span>Locked</span><span><span class="status-pill" [class.status-off]="user()!.locked" [class.status-ok]="!user()!.locked">{{ user()!.locked ? 'Locked' : 'No' }}</span></span></div>
+            <div class="info-row"><span>Failed attempts</span><span>{{ user()!.failedLoginAttempts }}</span></div>
+            @if (user()!.lastLoginAt) {
+              <div class="info-row"><span>Last login</span><span>{{ user()!.lastLoginAt | date:'medium' }}</span></div>
+            }
+            @if (user()!.lastLoginIp) {
+              <div class="info-row"><span>Last login IP</span><span class="mono">{{ user()!.lastLoginIp }}</span></div>
+            }
+            @if (user()!.passwordChangedAt) {
+              <div class="info-row"><span>Password changed</span><span>{{ user()!.passwordChangedAt | date:'medium' }}</span></div>
+            }
           </div>
         </section>
 
@@ -103,7 +130,36 @@
               </select>
               <button type="button" class="ghost-action" (click)="assignRole()">Assign role</button>
             </div>
+          } @else if (allRoles().length === 0) {
+            <p class="helper-copy">No roles defined yet. <a routerLink="/admin/roles">Create roles</a> first.</p>
           }
+        </section>
+
+        <section class="surface-card detail-full-width">
+          <div class="card-head"><h3>Custom attributes</h3></div>
+          @if (attributes().length > 0) {
+            <div class="table-shell" style="margin-bottom:12px;">
+              <table class="data-table">
+                <thead><tr><th>Key</th><th>Value</th><th>Actions</th></tr></thead>
+                <tbody>
+                  @for (attr of attributes(); track attr.id) {
+                    <tr>
+                      <td class="mono">{{ attr.key }}</td>
+                      <td>{{ attr.value }}</td>
+                      <td><button type="button" class="ghost-action danger-text" (click)="deleteAttribute(attr.key)">Remove</button></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="empty-hint" style="margin-bottom:12px;">No custom attributes.</p>
+          }
+          <div class="assign-inline" style="grid-template-columns:1fr 1fr auto;">
+            <input [(ngModel)]="newAttr.key" placeholder="Key" autocomplete="off">
+            <input [(ngModel)]="newAttr.value" placeholder="Value" autocomplete="off">
+            <button type="button" class="ghost-action" (click)="addAttribute()">Add</button>
+          </div>
         </section>
       }
     </div>

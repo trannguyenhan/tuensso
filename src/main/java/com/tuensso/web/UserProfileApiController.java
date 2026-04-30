@@ -63,6 +63,7 @@ public class UserProfileApiController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
         }
         user.setPasswordHash(passwordEncoder.encode(req.newPassword()));
+        user.setPasswordChangedAt(java.time.Instant.now());
         userRepo.save(user);
         return ResponseEntity.noContent().build();
     }

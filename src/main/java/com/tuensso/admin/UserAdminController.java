@@ -6,6 +6,8 @@ import java.util.UUID;
 import com.tuensso.audit.AuditService;
 import com.tuensso.user.UserAccount;
 import com.tuensso.user.UserAccountRepository;
+import com.tuensso.user.UserAttribute;
+import com.tuensso.user.UserAttributeRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -26,11 +28,14 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserAdminController {
 
     private final UserAccountRepository userRepo;
+    private final UserAttributeRepository attrRepo;
     private final PasswordEncoder passwordEncoder;
     private final AuditService audit;
 
-    public UserAdminController(UserAccountRepository userRepo, PasswordEncoder passwordEncoder, AuditService audit) {
+    public UserAdminController(UserAccountRepository userRepo, UserAttributeRepository attrRepo,
+                               PasswordEncoder passwordEncoder, AuditService audit) {
         this.userRepo = userRepo;
+        this.attrRepo = attrRepo;
         this.passwordEncoder = passwordEncoder;
         this.audit = audit;
     }
@@ -74,6 +79,10 @@ public class UserAdminController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (req.username() != null && !req.username().isBlank()) user.setUsername(req.username().trim());
         if (req.email() != null && !req.email().isBlank()) user.setEmail(req.email().trim());
+        if (req.firstName() != null) user.setFirstName(req.firstName().trim());
+        if (req.lastName() != null) user.setLastName(req.lastName().trim());
+        if (req.phone() != null) user.setPhone(req.phone().trim());
+        if (req.address() != null) user.setAddress(req.address().trim());
         return userRepo.save(user);
     }
 
@@ -93,6 +102,25 @@ public class UserAdminController {
         return userRepo.save(user);
     }
 
+    @PutMapping("/{id}/lock")
+    public UserAccount lock(@PathVariable UUID id) {
+        UserAccount user = userRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        user.setLocked(true);
+        user.setLockedUntil(null); // Permanent lock until admin unlocks
+        return userRepo.save(user);
+    }
+
+    @PutMapping("/{id}/unlock")
+    public UserAccount unlock(@PathVariable UUID id) {
+        UserAccount user = userRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        user.setLocked(false);
+        user.setFailedLoginAttempts(0);
+        user.setLockedUntil(null);
+        return userRepo.save(user);
+    }
+
     @PutMapping("/{id}/password")
     public ResponseEntity<Void> changePassword(@PathVariable UUID id,
                                                @RequestBody ChangePasswordRequest req,
@@ -103,6 +131,7 @@ public class UserAdminController {
         UserAccount user = userRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         user.setPasswordHash(passwordEncoder.encode(req.newPassword()));
+        user.setPasswordChangedAt(java.time.Instant.now());
         userRepo.save(user);
         audit.log("PASSWORD_RESET", auth.getName(), "user", user.getUsername(), "Admin reset", null);
         return ResponseEntity.noContent().build();
@@ -118,6 +147,36 @@ public class UserAdminController {
     }
 
     public record CreateUserRequest(String username, String email, String password) {}
-    public record UpdateUserRequest(String username, String email) {}
+    public record UpdateUserRequest(String username, String email,
+                                     String firstName, String lastName, String phone, String address) {}
     public record ChangePasswordRequest(String newPassword) {}
+
+    // Custom attributes
+    @GetMapping("/{id}/attributes")
+    public java.util.List<UserAttribute> getAttributes(@PathVariable java.util.UUID id) {
+        return attrRepo.findByUserId(id);
+    }
+
+    @PutMapping("/{id}/attributes")
+    public UserAttribute setAttribute(@PathVariable java.util.UUID id,
+                                      @RequestBody AttributeRequest req) {
+        if (!userRepo.existsById(id)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        UserAttribute attr = attrRepo.findByUserIdAndKey(id, req.key()).orElseGet(() -> {
+            UserAttribute a = new UserAttribute();
+            a.setUserId(id);
+            a.setKey(req.key());
+            return a;
+        });
+        attr.setValue(req.value());
+        return attrRepo.save(attr);
+    }
+
+    @jakarta.transaction.Transactional
+    @DeleteMapping("/{id}/attributes/{key}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAttribute(@PathVariable java.util.UUID id, @PathVariable String key) {
+        attrRepo.deleteByUserIdAndKey(id, key);
+    }
+
+    public record AttributeRequest(String key, String value) {}
 }

@@ -78,7 +78,9 @@
                 <tr>
                   <td><a [routerLink]="'/admin/users/' + user.id" class="table-link">{{ user.username }}</a></td>
                   <td class="mono">{{ user.email }}</td>
-                  <td><span class="status-pill" [class.status-ok]="user.enabled" [class.status-off]="!user.enabled">{{ user.enabled ? 'Enabled' : 'Disabled' }}</span></td>
+                  <td>
+                    <span class="status-pill" [class.status-ok]="user.enabled && !user.locked" [class.status-off]="!user.enabled || user.locked">{{ user.locked ? 'Locked' : (user.enabled ? 'Enabled' : 'Disabled') }}</span>
+                  </td>
                   <td>{{ userGroupNames(user) }}</td>
                   <td>
                     <div class="action-cell">
@@ -196,20 +198,20 @@
 
     <!-- ===== SESSIONS ===== -->
     @if (currentSection() === 'sessions') {
-      <div class="page-header"><h2>Active Sessions</h2></div>
+      <div class="page-header"><h2>Sessions</h2></div>
       @if (sessions().length === 0) {
-        <div class="surface-card"><p class="empty-hint">No active sessions.</p></div>
+        <div class="surface-card"><p class="empty-hint">No sessions found.</p></div>
       } @else {
         <div class="table-shell">
           <table class="data-table">
-            <thead><tr><th>User</th><th>Grant Type</th><th>Issued</th><th>Expires</th><th>Actions</th></tr></thead>
+            <thead><tr><th>User</th><th>Type</th><th>Last Activity</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
               @for (s of sessions(); track s.id) {
                 <tr>
                   <td><strong>{{ s.username }}</strong></td>
-                  <td>{{ s.grantType }}</td>
+                  <td><span class="pill">{{ s.grantType === 'http_session' ? 'Login' : 'OAuth2' }}</span></td>
                   <td>{{ s.issuedAt | date:'medium' }}</td>
-                  <td>{{ s.expiresAt | date:'medium' }}</td>
+                  <td><span class="status-pill" [class.status-ok]="!s.expired" [class.status-off]="s.expired">{{ s.expired ? 'Expired' : 'Active' }}</span></td>
                   <td>
                     <div class="action-cell">
                       <button type="button" class="ghost-action danger-text" (click)="revokeSession(s.id)">Revoke</button>

@@ -2,9 +2,6 @@ server:
   port: 8080
 
 spring:
-  profiles:
-    active: dev
-
   application:
     name: tuensso
 
@@ -32,8 +29,8 @@ spring:
 logging:
   level:
     org.springframework.security: INFO
-    org.springframework.security.oauth2: DEBUG
-    org.springframework.security.oauth2.server.authorization: TRACE
+    org.springframework.security.oauth2: INFO
+    org.springframework.security.oauth2.server.authorization: INFO
 
 management:
   endpoints:

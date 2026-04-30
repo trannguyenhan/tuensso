@@ -31,9 +31,7 @@ public class OidcMetadataController {
                         new OidcEndpoint("introspection", issuer + "/oauth2/introspect"),
                         new OidcEndpoint("revocation", issuer + "/oauth2/revoke")
                 ),
-                List.of(
-                        new SampleClient("app1", "http://127.0.0.1:8081/login/oauth2/code/app1")
-                ));
+                List.of());
     }
 
     public record OidcEndpointsResponse(String issuer,

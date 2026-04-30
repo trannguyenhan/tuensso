@@ -91,10 +91,28 @@ public class SecurityConfig {
                     }
                 })
                         .permitAll())
+                .sessionManagement(sm -> sm.maximumSessions(-1).sessionRegistry(sessionRegistry()))
                 .logout(Customizer.withDefaults())
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/sso/logout"));
+                .csrf(csrf -> csrf
+                        .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(new org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler())
+                        .ignoringRequestMatchers("/api/sso/logout"))
+                .addFilterAfter(new CsrfCookieFilter(), org.springframework.security.web.csrf.CsrfFilter.class);
 
         return http.build();
+    }
+
+    // Eagerly load CSRF token so the cookie is always set for SPA
+    static class CsrfCookieFilter extends org.springframework.web.filter.OncePerRequestFilter {
+        @Override
+        protected void doFilterInternal(jakarta.servlet.http.HttpServletRequest request,
+                                        jakarta.servlet.http.HttpServletResponse response,
+                                        jakarta.servlet.FilterChain filterChain) throws jakarta.servlet.ServletException, java.io.IOException {
+            org.springframework.security.web.csrf.CsrfToken csrfToken =
+                    (org.springframework.security.web.csrf.CsrfToken) request.getAttribute(org.springframework.security.web.csrf.CsrfToken.class.getName());
+            if (csrfToken != null) csrfToken.getToken(); // force cookie write
+            filterChain.doFilter(request, response);
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -157,6 +175,11 @@ public class SecurityConfig {
     @Bean
     PasswordEncoder passwordEncoder() {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
+
+    @Bean
+    org.springframework.security.core.session.SessionRegistry sessionRegistry() {
+        return new org.springframework.security.core.session.SessionRegistryImpl();
     }
 
     // -----------------------------------------------------------------------

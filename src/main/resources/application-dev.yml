@@ -1,0 +1,7 @@
+# Dev profile — activate with: mvn spring-boot:run -Dspring-boot.run.profiles=dev
+# Seeds demo users (admin/123456, user/123456) and sample OIDC clients.
+
+logging:
+  level:
+    org.springframework.security.oauth2: DEBUG
+    org.springframework.security.oauth2.server.authorization: TRACE

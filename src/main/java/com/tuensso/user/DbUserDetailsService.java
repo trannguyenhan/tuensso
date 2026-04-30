@@ -1,5 +1,6 @@
 package com.tuensso.user;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +25,14 @@ public class DbUserDetailsService implements UserDetailsService {
                 .or(() -> userAccountRepository.findByEmail(username))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
+        // Auto-unlock if lock has expired
+        if (user.isLocked() && user.getLockedUntil() != null && Instant.now().isAfter(user.getLockedUntil())) {
+            user.setLocked(false);
+            user.setFailedLoginAttempts(0);
+            user.setLockedUntil(null);
+            userAccountRepository.save(user);
+        }
+
         // Eagerly load groups and roles
         UserAccount full = userAccountRepository.findWithGroupsAndRolesById(user.getId()).orElse(user);
 
@@ -43,6 +52,7 @@ public class DbUserDetailsService implements UserDetailsService {
         return User.withUsername(user.getUsername())
                 .password(user.getPasswordHash())
                 .disabled(!user.isEnabled())
+                .accountLocked(user.isLocked())
                 .roles(roles.toArray(String[]::new))
                 .build();
     }

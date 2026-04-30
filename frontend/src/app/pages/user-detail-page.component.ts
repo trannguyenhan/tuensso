@@ -1,12 +1,13 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ConsoleApiService, UserRow, GroupRow, RoleRow } from '../services/console-api.service';
+import { ConsoleApiService, UserRow, GroupRow, RoleRow, UserAttributeRow } from '../services/console-api.service';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-user-detail-page',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, DatePipe],
   templateUrl: './user-detail-page.component.html'
 })
 export class UserDetailPageComponent {
@@ -23,11 +24,13 @@ export class UserDetailPageComponent {
   readonly allGroups = signal<GroupRow[]>([]);
   readonly allRoles = signal<RoleRow[]>([]);
   readonly userRoles = signal<RoleRow[]>([]);
+  readonly attributes = signal<UserAttributeRow[]>([]);
 
-  form = { username: '', email: '', password: '' };
+  form = { username: '', email: '', password: '', firstName: '', lastName: '', phone: '', address: '' };
   newPassword = '';
   selectedGroupId = '';
   selectedRoleId = '';
+  newAttr = { key: '', value: '' };
 
   constructor() {
     const id = this.route.snapshot.paramMap.get('id')!;
@@ -38,12 +41,18 @@ export class UserDetailPageComponent {
       this.api.bootstrap().subscribe(data => this.allGroups.set(data.groups));
       this.api.getRoles().subscribe(r => this.allRoles.set(r));
       this.api.getUserRoles(id).subscribe(r => this.userRoles.set(r));
+      this.api.getUserAttributes(id).subscribe(a => this.attributes.set(a));
     }
   }
 
   private loadUser(userId: string): void {
     this.api.getUser(userId).subscribe({
-      next: (data) => { this.user.set(data); this.form.username = data.username; this.form.email = data.email; this.loading.set(false); },
+      next: (data) => {
+        this.user.set(data); this.form.username = data.username; this.form.email = data.email;
+        this.form.firstName = data.firstName || ''; this.form.lastName = data.lastName || '';
+        this.form.phone = data.phone || ''; this.form.address = data.address || '';
+        this.loading.set(false);
+      },
       error: () => { this.showErr('User not found.'); this.loading.set(false); }
     });
   }
@@ -57,7 +66,11 @@ export class UserDetailPageComponent {
       });
     } else {
       const u = this.user()!;
-      this.api.updateUser(u.id, { username: this.form.username.trim(), email: this.form.email.trim() }).subscribe({
+      this.api.updateUser(u.id, {
+        username: this.form.username.trim(), email: this.form.email.trim(),
+        firstName: this.form.firstName, lastName: this.form.lastName,
+        phone: this.form.phone, address: this.form.address
+      }).subscribe({
         next: () => { this.saving.set(false); this.showMsg('Saved.'); this.loadUser(u.id); },
         error: (err) => { this.saving.set(false); this.showErr(err.error?.message ?? 'Save failed.'); }
       });
@@ -68,6 +81,14 @@ export class UserDetailPageComponent {
     const u = this.user(); if (!u) return;
     (u.enabled ? this.api.disableUser(u.id) : this.api.enableUser(u.id)).subscribe({
       next: () => { this.showMsg(u.enabled ? 'Disabled.' : 'Enabled.'); this.loadUser(u.id); },
+      error: (err) => this.showErr(err.error?.message ?? 'Failed.')
+    });
+  }
+
+  toggleLocked(): void {
+    const u = this.user(); if (!u) return;
+    (u.locked ? this.api.unlockUser(u.id) : this.api.lockUser(u.id)).subscribe({
+      next: () => { this.showMsg(u.locked ? 'Unlocked.' : 'Locked.'); this.loadUser(u.id); },
       error: (err) => this.showErr(err.error?.message ?? 'Failed.')
     });
   }
@@ -124,4 +145,20 @@ export class UserDetailPageComponent {
 
   private showMsg(msg: string): void { this.message.set(msg); this.error.set(null); setTimeout(() => this.message.set(null), 4000); }
   private showErr(msg: string): void { this.error.set(msg); this.message.set(null); setTimeout(() => this.error.set(null), 6000); }
+
+  addAttribute(): void {
+    const u = this.user(); if (!u || !this.newAttr.key.trim()) return;
+    this.api.setUserAttribute(u.id, this.newAttr.key.trim(), this.newAttr.value).subscribe({
+      next: () => { this.newAttr = { key: '', value: '' }; this.api.getUserAttributes(u.id).subscribe(a => this.attributes.set(a)); },
+      error: (err) => this.showErr(err.error?.message ?? 'Failed.')
+    });
+  }
+
+  deleteAttribute(key: string): void {
+    const u = this.user(); if (!u) return;
+    this.api.deleteUserAttribute(u.id, key).subscribe({
+      next: () => this.api.getUserAttributes(u.id).subscribe(a => this.attributes.set(a)),
+      error: (err) => this.showErr(err.error?.message ?? 'Failed.')
+    });
+  }
 }
