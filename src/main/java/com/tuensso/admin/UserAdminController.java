@@ -46,10 +46,24 @@ public class UserAdminController {
     }
 
     @GetMapping("/{id}")
-    public UserAccount get(@PathVariable UUID id) {
-        return userRepo.findById(id)
+    public UserDetailResponse get(@PathVariable UUID id) {
+        UserAccount user = userRepo.findWithGroupsAndRolesById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        var groups = user.getGroups().stream()
+                .map(g -> new GroupRef(g.getId().toString(), g.getName())).toList();
+        return new UserDetailResponse(user.getId().toString(), user.getUsername(), user.getEmail(),
+                user.getFirstName(), user.getLastName(), user.getPhone(), user.getAddress(),
+                user.isEnabled(), user.isLocked(), user.getFailedLoginAttempts(),
+                user.getLockedUntil(), user.getLastLoginAt(), user.getLastLoginIp(),
+                user.getPasswordChangedAt(), groups);
     }
+
+    public record GroupRef(String id, String name) {}
+    public record UserDetailResponse(String id, String username, String email,
+            String firstName, String lastName, String phone, String address,
+            boolean enabled, boolean locked, int failedLoginAttempts,
+            java.time.Instant lockedUntil, java.time.Instant lastLoginAt, String lastLoginIp,
+            java.time.Instant passwordChangedAt, java.util.List<GroupRef> groups) {}
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

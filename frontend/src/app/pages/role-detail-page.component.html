@@ -1,0 +1,79 @@
+@if (loading()) {
+    <p class="empty-hint">Loading...</p>
+  } @else {
+    @if (message()) {
+      <div class="message-banner success">{{ message() }}</div>
+    }
+    @if (error()) {
+      <div class="message-banner error">{{ error() }}</div>
+    }
+
+    <div class="page-header">
+      <div>
+        <a routerLink="/admin/roles" class="back-link">&larr; Roles</a>
+        <h2>{{ isCreate ? 'Create Role' : role()?.name }}</h2>
+      </div>
+      @if (!isCreate && role()) {
+        <span class="count-badge">{{ members().length }} user{{ members().length !== 1 ? 's' : '' }}</span>
+      }
+    </div>
+
+    <div class="detail-grid">
+      <section class="surface-card">
+        <div class="card-head"><h3>{{ isCreate ? 'New role' : 'Settings' }}</h3></div>
+        <form class="stack-form" (ngSubmit)="save()">
+          <label>Name</label>
+          <input [(ngModel)]="form.name" name="name" required [disabled]="!isCreate">
+          <label>Description</label>
+          <input [(ngModel)]="form.description" name="description">
+          @if (isCreate) {
+            <button type="submit" [disabled]="saving()">{{ saving() ? 'Creating...' : 'Create role' }}</button>
+          }
+        </form>
+        @if (!isCreate) {
+          <div class="action-row" style="margin-top:12px;">
+            <button type="button" class="ghost-action danger-text" (click)="deleteRole()">Delete role</button>
+          </div>
+        }
+      </section>
+
+      @if (!isCreate && role()) {
+        <section class="surface-card">
+          <div class="card-head inline-head">
+            <h3>Members</h3>
+            <span class="count-badge">{{ members().length }}</span>
+          </div>
+          @if (members().length === 0) {
+            <p class="empty-hint">No users with this role.</p>
+          } @else {
+            <div class="table-shell">
+              <table class="data-table">
+                <thead><tr><th>Username</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                  @for (user of members(); track user.id) {
+                    <tr>
+                      <td><a [routerLink]="'/admin/users/' + user.id" class="table-link">{{ user.username }}</a></td>
+                      <td class="mono">{{ user.email }}</td>
+                      <td><span class="status-pill" [class.status-ok]="user.enabled" [class.status-off]="!user.enabled">{{ user.enabled ? 'Enabled' : 'Disabled' }}</span></td>
+                      <td><button type="button" class="ghost-action danger-text" (click)="removeMember(user.id)">Remove</button></td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+          @if (nonMembers().length > 0) {
+            <div class="assign-inline" style="margin-top:12px;">
+              <select [(ngModel)]="selectedUserId">
+                <option value="" disabled>Select user...</option>
+                @for (u of nonMembers(); track u.id) {
+                  <option [value]="u.id">{{ u.username }}</option>
+                }
+              </select>
+              <button type="button" class="ghost-action" (click)="addMember()">Add user</button>
+            </div>
+          }
+        </section>
+      }
+    </div>
+  }

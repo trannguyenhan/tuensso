@@ -12,7 +12,7 @@ public class HomeController {
                  "/admin/users", "/admin/users/{id}",
                  "/admin/groups", "/admin/groups/{id}",
                  "/admin/integration",
-                 "/admin/roles", "/admin/sessions", "/admin/audit"})
+                 "/admin/roles", "/admin/roles/{id}", "/admin/sessions", "/admin/audit"})
     public String spa() {
         return "forward:/index.html";
     }

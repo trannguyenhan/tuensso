@@ -16,6 +16,9 @@ services:
       TUENSSO_ISSUER: ${TUENSSO_ISSUER:-http://localhost:8080}
       TUENSSO_DB_TYPE: ${DB_TYPE:-mariadb}
       TUENSSO_LOGO_UPLOAD_DIR: /data/app-logos
+      TUENSSO_ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      TUENSSO_ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      TUENSSO_ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@tuensso.local}
     volumes:
       - logos:/data/app-logos
     restart: unless-stopped

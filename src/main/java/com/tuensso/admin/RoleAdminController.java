@@ -26,6 +26,25 @@ public class RoleAdminController {
     @GetMapping
     public List<Role> list() { return roleRepo.findAll(); }
 
+    @GetMapping("/{id}")
+    public Role get(@PathVariable UUID id) {
+        return roleRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    @GetMapping("/{roleId}/users")
+    public List<RoleMember> roleMembers(@PathVariable UUID roleId) {
+        roleRepo.findById(roleId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return userRepo.findAll().stream()
+                .filter(u -> {
+                    var full = userRepo.findWithGroupsAndRolesById(u.getId()).orElse(u);
+                    return full.getRoles().stream().anyMatch(r -> r.getId().equals(roleId));
+                })
+                .map(u -> new RoleMember(u.getId().toString(), u.getUsername(), u.getEmail(), u.isEnabled()))
+                .toList();
+    }
+
+    public record RoleMember(String id, String username, String email, boolean enabled) {}
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Role create(@RequestBody CreateRoleRequest req) {

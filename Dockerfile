@@ -7,8 +7,8 @@ COPY frontend ./frontend
 RUN mvn clean package -DskipTests -q
 
 # Stage 2: Run
-FROM eclipse-temurin:21-jre
-RUN addgroup --system app && adduser --system --ingroup app app
+FROM eclipse-temurin:21-jre-alpine
+RUN addgroup -S app && adduser -S app -G app
 WORKDIR /app
 COPY --from=build /app/target/tuensso-0.0.1-SNAPSHOT.jar app.jar
 RUN mkdir -p /data/app-logos && chown app:app /data/app-logos

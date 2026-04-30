@@ -243,6 +243,12 @@ export class ConsoleApiService {
   getRoles(): Observable<RoleRow[]> {
     return this.http.get<RoleRow[]>('/api/admin/roles');
   }
+  getRole(id: string): Observable<RoleRow> {
+    return this.http.get<RoleRow>(`/api/admin/roles/${id}`);
+  }
+  getRoleMembers(roleId: string): Observable<AssignedUser[]> {
+    return this.http.get<AssignedUser[]>(`/api/admin/roles/${roleId}/users`);
+  }
   createRole(name: string, description: string): Observable<RoleRow> {
     return this.http.post<RoleRow>('/api/admin/roles', { name, description });
   }

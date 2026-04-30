@@ -6,6 +6,7 @@ import { SsoLogoutPageComponent } from './pages/sso-logout-page.component';
 import { AppDetailPageComponent } from './pages/app-detail-page.component';
 import { UserDetailPageComponent } from './pages/user-detail-page.component';
 import { GroupDetailPageComponent } from './pages/group-detail-page.component';
+import { RoleDetailPageComponent } from './pages/role-detail-page.component';
 import { DashboardPageComponent } from './pages/dashboard-page.component';
 import { DocsPageComponent } from './pages/docs-page.component';
 import { AccountPageComponent } from './pages/account-page.component';
@@ -25,6 +26,7 @@ export const routes: Routes = [
   { path: 'admin/apps/:id', component: AppDetailPageComponent },
   { path: 'admin/users/:id', component: UserDetailPageComponent },
   { path: 'admin/groups/:id', component: GroupDetailPageComponent },
+  { path: 'admin/roles/:id', component: RoleDetailPageComponent },
   { path: 'admin/apps', component: ConsolePageComponent },
   { path: 'admin/users', component: ConsolePageComponent },
   { path: 'admin/groups', component: ConsolePageComponent },

@@ -164,16 +164,12 @@
 
     <!-- ===== ROLES ===== -->
     @if (currentSection() === 'roles') {
-      <div class="page-header"><h2>Roles</h2></div>
-      <div class="surface-card" style="max-width:500px;">
-        <div class="card-head"><h3>Create role</h3></div>
-        <form class="stack-form" (ngSubmit)="createRole()">
-          <label>Name</label>
-          <input [(ngModel)]="newRole.name" name="name" required placeholder="e.g. editor">
-          <label>Description</label>
-          <input [(ngModel)]="newRole.description" name="description" placeholder="Optional">
-          <button type="submit">Create</button>
-        </form>
+      <div class="page-header">
+        <h2>Roles</h2>
+        <div class="page-header-actions">
+          <span class="count-badge">{{ roles().length }}</span>
+          <a routerLink="/admin/roles/create" class="btn-create" style="background:var(--primary);color:#fff;text-decoration:none;border-radius:var(--radius);display:inline-flex;align-items:center;padding:0 12px;min-height:32px;font-size:12px;font-weight:600;">+ Create</a>
+        </div>
       </div>
       @if (roles().length === 0) {
         <div class="surface-card"><p class="empty-hint">No roles yet.</p></div>
@@ -184,10 +180,15 @@
             <tbody>
               @for (role of roles(); track role.id) {
                 <tr>
-                  <td><strong>{{ role.name }}</strong></td>
+                  <td><a [routerLink]="'/admin/roles/' + role.id" class="table-link">{{ role.name }}</a></td>
                   <td>{{ role.description || '-' }}</td>
                   <td>{{ role.createdAt | date:'mediumDate' }}</td>
-                  <td><button type="button" class="ghost-action danger-text" (click)="deleteRole(role.id, role.name)">Delete</button></td>
+                  <td>
+                    <div class="action-cell">
+                      <a [routerLink]="'/admin/roles/' + role.id" class="ghost-action" style="text-decoration:none;">Edit</a>
+                      <button type="button" class="ghost-action danger-text" (click)="deleteRole(role.id, role.name)">Delete</button>
+                    </div>
+                  </td>
                 </tr>
               }
             </tbody>
