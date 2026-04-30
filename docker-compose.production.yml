@@ -1,17 +1,20 @@
+# Production — pull from Docker Hub, connect to external database
+# Usage: cp .env.example .env && docker compose -f docker-compose.production.yml up -d
+#
+# MariaDB (default): DB_URL=jdbc:mariadb://host:3306/tuensso
+# PostgreSQL:        DB_TYPE=postgresql  DB_URL=jdbc:postgresql://host:5432/tuensso
+
 services:
   tuensso:
     image: tuensso/tuensso:latest
     ports:
       - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_URL: jdbc:postgresql://${DB_HOST:?Set DB_HOST in .env}:${DB_PORT:-5432}/${DB_NAME:-tuensso}
+      SPRING_DATASOURCE_URL: ${DB_URL:?Set DB_URL in .env}
       SPRING_DATASOURCE_USERNAME: ${DB_USER:?Set DB_USER in .env}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      SPRING_FLYWAY_ENABLED: "true"
       TUENSSO_ISSUER: ${TUENSSO_ISSUER:-http://localhost:8080}
+      TUENSSO_DB_TYPE: ${DB_TYPE:-mariadb}
       TUENSSO_LOGO_UPLOAD_DIR: /data/app-logos
     volumes:
       - logos:/data/app-logos

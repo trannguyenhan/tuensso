@@ -1,15 +1,17 @@
 # Stage 1: Build
-FROM eclipse-temurin:21-jdk AS build
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 COPY frontend ./frontend
-RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
 RUN mvn clean package -DskipTests -q
 
 # Stage 2: Run
 FROM eclipse-temurin:21-jre
+RUN addgroup --system app && adduser --system --ingroup app app
 WORKDIR /app
 COPY --from=build /app/target/tuensso-0.0.1-SNAPSHOT.jar app.jar
+RUN mkdir -p /data/app-logos && chown app:app /data/app-logos
+USER app
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

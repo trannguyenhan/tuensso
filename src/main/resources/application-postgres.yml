@@ -1,0 +1,13 @@
+# PostgreSQL profile
+# Usage: mvn spring-boot:run -Dspring-boot.run.profiles=postgres
+# Or:    java -jar tuensso.jar --spring.profiles.active=postgres
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/tuensso
+    username: postgres
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+tuensso:
+  db-type: postgresql

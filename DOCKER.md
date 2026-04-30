@@ -39,24 +39,43 @@ volumes:
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `SPRING_DATASOURCE_URL` | Yes | — | PostgreSQL JDBC URL |
+| `SPRING_DATASOURCE_URL` | Yes | — | JDBC URL (`jdbc:postgresql://...` or `jdbc:mariadb://...`) |
 | `SPRING_DATASOURCE_USERNAME` | Yes | — | Database username |
 | `SPRING_DATASOURCE_PASSWORD` | Yes | — | Database password |
 | `TUENSSO_ISSUER` | Yes | `http://localhost:8080` | Public URL of TuenSSO (used in JWT issuer claim) |
+| `TUENSSO_DB_TYPE` | No | `postgresql` | Database type: `postgresql` or `mariadb` |
 | `TUENSSO_LOGO_UPLOAD_DIR` | No | `./data/app-logos` | Directory for uploaded app logos |
 | `SERVER_PORT` | No | `8080` | HTTP port |
 | `SPRING_PROFILES_ACTIVE` | No | — | Set to `dev` to seed demo data |
 
 ## Database
 
-TuenSSO requires **PostgreSQL 12+**. The database schema is managed automatically via Flyway migrations on startup.
+TuenSSO supports **PostgreSQL 12+** and **MariaDB 10.6+** / **MySQL 8+**.
 
-Create the database before first run:
+Schema is managed automatically via Flyway migrations on startup.
 
-```sql
-CREATE DATABASE tuensso;
-CREATE USER tuensso WITH PASSWORD 'your-password';
-GRANT ALL PRIVILEGES ON DATABASE tuensso TO tuensso;
+### PostgreSQL
+
+```bash
+docker run -d -p 8080:8080 \
+  -e SPRING_DATASOURCE_URL=jdbc:postgresql://your-db:5432/tuensso \
+  -e SPRING_DATASOURCE_USERNAME=tuensso \
+  -e SPRING_DATASOURCE_PASSWORD=your-password \
+  -e TUENSSO_DB_TYPE=postgresql \
+  -e TUENSSO_ISSUER=https://sso.yourdomain.com \
+  tuensso/tuensso:latest
+```
+
+### MariaDB / MySQL
+
+```bash
+docker run -d -p 8080:8080 \
+  -e SPRING_DATASOURCE_URL=jdbc:mariadb://your-db:3306/tuensso \
+  -e SPRING_DATASOURCE_USERNAME=tuensso \
+  -e SPRING_DATASOURCE_PASSWORD=your-password \
+  -e TUENSSO_DB_TYPE=mariadb \
+  -e TUENSSO_ISSUER=https://sso.yourdomain.com \
+  tuensso/tuensso:latest
 ```
 
 ## Volumes

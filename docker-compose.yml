@@ -1,33 +1,42 @@
+# Development — MariaDB (default)
+# Usage: cp .env.example .env && docker compose up --build
+
 services:
   tuensso:
     build: .
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/tuensso
-      SPRING_DATASOURCE_USERNAME: tuensso
-      SPRING_DATASOURCE_PASSWORD: tuensso123
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      TUENSSO_ISSUER: http://localhost:8080
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/${DB_NAME:-tuensso}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-tuensso}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.mariadb.jdbc.Driver
+      TUENSSO_ISSUER: ${TUENSSO_ISSUER:-http://localhost:8080}
+      TUENSSO_DB_TYPE: mariadb
+      TUENSSO_LOGO_UPLOAD_DIR: /data/app-logos
+    volumes:
+      - logos:/data/app-logos
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
 
   db:
-    image: postgres:16-alpine
+    image: mariadb:11
     environment:
-      POSTGRES_DB: tuensso
-      POSTGRES_USER: tuensso
-      POSTGRES_PASSWORD: tuensso123
+      MARIADB_DATABASE: ${DB_NAME:-tuensso}
+      MARIADB_USER: ${DB_USER:-tuensso}
+      MARIADB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - dbdata:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tuensso"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
       timeout: 3s
       retries: 5
 
 volumes:
-  pgdata:
+  dbdata:
+  logos:
