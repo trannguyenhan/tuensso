@@ -28,6 +28,7 @@ public class OidcMetadataController {
                         new OidcEndpoint("token", issuer + "/oauth2/token"),
                         new OidcEndpoint("jwks", issuer + "/oauth2/jwks"),
                         new OidcEndpoint("userinfo", issuer + "/userinfo"),
+                        new OidcEndpoint("end_session", issuer + "/connect/logout"),
                         new OidcEndpoint("introspection", issuer + "/oauth2/introspect"),
                         new OidcEndpoint("revocation", issuer + "/oauth2/revoke")
                 ),

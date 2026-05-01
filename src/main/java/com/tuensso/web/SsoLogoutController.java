@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,7 +19,8 @@ public class SsoLogoutController {
 
     @GetMapping("/logout/validate")
     public LogoutValidation validateLogout(@RequestParam(required = false) String client_id,
-                                           @RequestParam(required = false) String redirect_uri) {
+                                           @RequestParam(required = false) String redirect_uri,
+                                           @RequestParam(required = false) String state) {
         if (client_id == null || client_id.isBlank()) {
             return new LogoutValidation(false, null, null);
         }
@@ -32,7 +34,7 @@ public class SsoLogoutController {
             return new LogoutValidation(false, null, null);
         }
 
-        String validatedRedirect = validateRedirectUri(client_id, redirect_uri);
+        String validatedRedirect = validateRedirectUri(client_id, redirect_uri, state);
         return new LogoutValidation(true, clientName, validatedRedirect);
     }
 
@@ -48,7 +50,7 @@ public class SsoLogoutController {
         // Re-validate redirect_uri server-side (don't trust client)
         String redirect = null;
         if (body.clientId != null && body.redirectUri != null) {
-            redirect = validateRedirectUri(body.clientId, body.redirectUri);
+            redirect = validateRedirectUri(body.clientId, body.redirectUri, body.state);
         }
         return new LogoutResult(true, redirect);
     }
@@ -56,7 +58,7 @@ public class SsoLogoutController {
     /**
      * Validates redirect_uri by exact-matching against registered redirect URIs for the client.
      */
-    private String validateRedirectUri(String clientId, String redirectUri) {
+    private String validateRedirectUri(String clientId, String redirectUri, String state) {
         if (redirectUri == null || redirectUri.isBlank()) return null;
 
         String redirectUris = jdbcTemplate.query(
@@ -67,6 +69,12 @@ public class SsoLogoutController {
         String requested = redirectUri.trim();
         for (String registered : redirectUris.split(",")) {
             if (requested.equals(registered.trim())) {
+                if (state != null && !state.isBlank()) {
+                    return UriComponentsBuilder.fromUriString(requested)
+                            .queryParam("state", state)
+                            .build(true)
+                            .toUriString();
+                }
                 return requested;
             }
         }
@@ -74,6 +82,6 @@ public class SsoLogoutController {
     }
 
     public record LogoutValidation(boolean valid, String clientName, String redirectUri) {}
-    public record LogoutRequest(String clientId, String redirectUri) {}
+    public record LogoutRequest(String clientId, String redirectUri, String state) {}
     public record LogoutResult(boolean success, String redirectUri) {}
 }

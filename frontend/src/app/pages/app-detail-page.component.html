@@ -130,6 +130,16 @@
     </div>
   </section>
 
+  <section class="surface-card" style="margin-top:16px;">
+    <div class="card-head"><h3>Logout URL (this app)</h3></div>
+    <p class="hint" style="margin:0 0 12px;">Use this URL for RP-initiated logout (Keycloak-like flow).</p>
+    <div style="position:relative;">
+      <pre class="token-sample">{{ sampleLogoutUrl }}</pre>
+      <button type="button" class="icon-btn" style="position:absolute;top:8px;right:8px;" title="Copy"
+        (click)="copyToClipboard(sampleLogoutUrl)">&#x2398;</button>
+    </div>
+  </section>
+
   <!-- User Assignment (edit mode only) -->
   @if (!isCreate && app()) {
     <section class="surface-card" style="margin-top:16px;">

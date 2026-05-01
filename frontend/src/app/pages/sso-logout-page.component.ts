@@ -23,13 +23,15 @@ export class SsoLogoutPageComponent {
   readonly loading = signal(true);
 
   private clientId = '';
+  private state = '';
 
   constructor() {
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       this.clientId = params.get('client_id') || '';
+      this.state = params.get('state') || '';
       const redirect = params.get('redirect_uri') || '';
       this.http.get<LogoutValidation>('/api/sso/logout/validate', {
-        params: { client_id: this.clientId, redirect_uri: redirect }
+        params: { client_id: this.clientId, redirect_uri: redirect, state: this.state }
       }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: v => {
           this.valid.set(v.valid);
@@ -44,7 +46,7 @@ export class SsoLogoutPageComponent {
 
   confirmLogout(): void {
     this.http.post<LogoutResult>('/api/sso/logout', {
-      clientId: this.clientId, redirectUri: this.redirectUri()
+      clientId: this.clientId, redirectUri: this.redirectUri(), state: this.state
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
         next: r => {
           this.done.set(true);

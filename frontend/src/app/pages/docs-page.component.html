@@ -124,7 +124,11 @@ docker run -p 8080:8080 tuensso</pre>
 Authorization URI: http://localhost:8080/oauth2/authorize
 Token URI:         http://localhost:8080/oauth2/token
 JWKS URI:          http://localhost:8080/oauth2/jwks
-UserInfo URI:      http://localhost:8080/userinfo</pre>
+  UserInfo URI:      http://localhost:8080/userinfo
+  End Session URI:   http://localhost:8080/connect/logout</pre>
+
+    <h3>RP-initiated logout (Keycloak-like)</h3>
+    <pre>http://localhost:8080/connect/logout?client_id=myapp&post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Flogout-callback&state=optional-state</pre>
 
     <h2>PostgreSQL (Production)</h2>
     <p>By default TuenSSO uses H2 in-memory database. For production, switch to PostgreSQL:</p>

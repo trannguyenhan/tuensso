@@ -157,10 +157,15 @@
             <tr><td>Token</td><td class="mono">{{ bootstrap()!.issuer }}/oauth2/token</td></tr>
             <tr><td>JWKS</td><td class="mono">{{ bootstrap()!.issuer }}/oauth2/jwks</td></tr>
             <tr><td>UserInfo</td><td class="mono">{{ bootstrap()!.issuer }}/userinfo</td></tr>
+            <tr><td>End session (logout)</td><td class="mono">{{ bootstrap()!.issuer }}/connect/logout</td></tr>
             <tr><td>Introspect</td><td class="mono">{{ bootstrap()!.issuer }}/oauth2/introspect</td></tr>
             <tr><td>Revoke</td><td class="mono">{{ bootstrap()!.issuer }}/oauth2/revoke</td></tr>
           </tbody>
         </table>
+      </div>
+      <div class="surface-card" style="margin-top:12px;">
+        <div class="card-head"><h3>Logout URL example</h3></div>
+        <pre class="token-sample">{{ bootstrap()!.issuer }}/connect/logout?client_id=your-client&post_logout_redirect_uri=https%3A%2F%2Fyour-app.example%2Flogout-callback&state=optional-state</pre>
       </div>
     }
 

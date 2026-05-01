@@ -72,7 +72,7 @@ public class SecurityConfig {
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-            .requestMatchers("/", "/login", "/sso-login", "/sso-logout", "/admin/login", "/index.html", "/error", "/api/auth/**", "/api/oidc/**", "/api/branding/**", "/api/sso/**").permitAll()
+            .requestMatchers("/", "/login", "/sso-login", "/sso-logout", "/connect/logout", "/admin/login", "/index.html", "/error", "/api/auth/**", "/api/oidc/**", "/api/branding/**", "/api/sso/**").permitAll()
             .requestMatchers("/*.js", "/*.css", "/*.txt", "/*.map", "/assets/**").permitAll()
                 .requestMatchers("/admin/**", "/api/admin/console/**").hasAnyAuthority(
                         "PERM_dashboard", "PERM_apps", "PERM_users", "PERM_groups",

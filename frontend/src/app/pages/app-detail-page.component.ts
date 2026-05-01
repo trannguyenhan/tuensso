@@ -174,6 +174,17 @@ export class AppDetailPageComponent {
     }, null, 2);
   }
 
+  get sampleLogoutUrl(): string {
+    const origin = window.location.origin;
+    const clientId = (this.app()?.clientId || this.form.clientId || 'your-client').trim();
+
+    const firstRedirect = (this.app()?.redirectUris?.[0]
+      || this.form.redirectUris.split('\n').map(v => v.trim()).find(Boolean)
+      || 'https://your-app.example/logout-callback').trim();
+
+    return `${origin}/connect/logout?client_id=${encodeURIComponent(clientId)}&post_logout_redirect_uri=${encodeURIComponent(firstRedirect)}&state=optional-state`;
+  }
+
   copyToClipboard(value: string): void { navigator.clipboard.writeText(value).then(() => this.showMsg('Copied.')); }
   regenerateId(): void { this.form.clientId = this.genId(); }
   regenerateSecret(): void { this.form.clientSecret = this.genSecret(); }
