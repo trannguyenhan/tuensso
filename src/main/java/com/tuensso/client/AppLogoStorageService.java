@@ -1,6 +1,7 @@
 package com.tuensso.client;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -36,7 +37,7 @@ public class AppLogoStorageService {
         }
 
         String safeClientId = clientId.replaceAll("[^a-zA-Z0-9_-]", "-").toLowerCase(Locale.ROOT);
-        String fileName = safeClientId + "." + extension;
+        String fileName = safeClientId + "-" + System.currentTimeMillis() + "." + extension;
         Path target = logoDir.resolve(fileName).normalize();
 
         if (!target.startsWith(logoDir)) {
@@ -45,6 +46,7 @@ public class AppLogoStorageService {
 
         try {
             Files.createDirectories(logoDir);
+            cleanupPreviousLogos(safeClientId);
             Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException ex) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Cannot store logo", ex);
@@ -66,5 +68,14 @@ public class AppLogoStorageService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid file name");
         }
         return fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
+    }
+
+    private void cleanupPreviousLogos(String safeClientId) throws IOException {
+        String prefix = safeClientId + "-";
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(logoDir, prefix + "*")) {
+            for (Path path : stream) {
+                Files.deleteIfExists(path);
+            }
+        }
     }
 }

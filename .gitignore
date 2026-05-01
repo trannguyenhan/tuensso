@@ -21,3 +21,4 @@ frontend/node
 # Environment secrets
 .env
 frontend/.angular/
+!data/app-logos/.gitignore
