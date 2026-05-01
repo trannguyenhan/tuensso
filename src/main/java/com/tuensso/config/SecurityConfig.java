@@ -251,6 +251,9 @@ public class SecurityConfig {
     AuthorizationServerSettings authorizationServerSettings(@Value("${tuensso.issuer}") String issuer) {
         return AuthorizationServerSettings.builder()
                 .issuer(issuer)
+                // Move Spring's built-in OIDC session logout endpoint away from /connect/logout
+                // so our custom ConnectLogoutController (RP-initiated logout) can handle it.
+                .oidcLogoutEndpoint("/internal/oidc-session-logout")
                 .build();
     }
 
