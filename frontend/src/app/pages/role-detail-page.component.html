@@ -14,7 +14,12 @@
         <h2>{{ isCreate ? 'Create Role' : role()?.name }}</h2>
       </div>
       @if (!isCreate && role()) {
-        <span class="count-badge">{{ members().length }} user{{ members().length !== 1 ? 's' : '' }}</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          @if (isAdminRole) {
+            <span class="status-pill status-ok">System role</span>
+          }
+          <span class="count-badge">{{ members().length }} user{{ members().length !== 1 ? 's' : '' }}</span>
+        </div>
       }
     </div>
 
@@ -23,14 +28,27 @@
         <div class="card-head"><h3>{{ isCreate ? 'New role' : 'Settings' }}</h3></div>
         <form class="stack-form" (ngSubmit)="save()">
           <label>Name</label>
-          <input [(ngModel)]="form.name" name="name" required [disabled]="!isCreate">
+          <input [(ngModel)]="form.name" name="name" required [disabled]="!isCreate || isAdminRole">
           <label>Description</label>
-          <input [(ngModel)]="form.description" name="description">
+          <input [(ngModel)]="form.description" name="description" [disabled]="isAdminRole">
+
+          <label>Menu permissions</label>
+          <div class="permission-grid">
+            @for (perm of allPermissions; track perm) {
+              <label class="checkbox-row">
+                <input type="checkbox" [(ngModel)]="permChecks[perm]" [name]="'perm_' + perm" [disabled]="isAdminRole">
+                <span>{{ perm | titlecase }}</span>
+              </label>
+            }
+          </div>
+
           @if (isCreate) {
             <button type="submit" [disabled]="saving()">{{ saving() ? 'Creating...' : 'Create role' }}</button>
+          } @else if (!isAdminRole) {
+            <button type="submit" [disabled]="saving()">{{ saving() ? 'Saving...' : 'Save changes' }}</button>
           }
         </form>
-        @if (!isCreate) {
+        @if (!isCreate && !isAdminRole) {
           <div class="action-row" style="margin-top:12px;">
             <button type="button" class="ghost-action danger-text" (click)="deleteRole()">Delete role</button>
           </div>

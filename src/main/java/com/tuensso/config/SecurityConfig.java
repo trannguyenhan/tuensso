@@ -74,7 +74,16 @@ public class SecurityConfig {
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
             .requestMatchers("/", "/login", "/sso-login", "/sso-logout", "/admin/login", "/index.html", "/error", "/api/auth/**", "/api/oidc/**", "/api/branding/**", "/api/sso/**").permitAll()
             .requestMatchers("/*.js", "/*.css", "/*.txt", "/*.map", "/assets/**").permitAll()
-                .requestMatchers("/admin/**", "/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/admin/**", "/api/admin/console/**").hasAnyAuthority(
+                        "PERM_dashboard", "PERM_apps", "PERM_users", "PERM_groups",
+                        "PERM_roles", "PERM_sessions", "PERM_audit", "PERM_integration")
+                .requestMatchers("/api/admin/clients/**").hasAuthority("PERM_apps")
+                .requestMatchers("/api/admin/users/**").hasAuthority("PERM_users")
+                .requestMatchers("/api/admin/groups/**").hasAuthority("PERM_groups")
+                .requestMatchers("/api/admin/roles/**").hasAuthority("PERM_roles")
+                .requestMatchers("/api/admin/sessions/**").hasAuthority("PERM_sessions")
+                .requestMatchers("/api/admin/audit/**").hasAuthority("PERM_audit")
+                .requestMatchers("/api/admin/scopes/**").hasAuthority("PERM_apps")
                 .requestMatchers("/account", "/dashboard", "/api/me").authenticated()
                 .anyRequest().authenticated())
                 .formLogin(form -> form

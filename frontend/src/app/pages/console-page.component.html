@@ -72,7 +72,7 @@
       } @else {
         <div class="table-shell">
           <table class="data-table">
-            <thead><tr><th>Username</th><th>Email</th><th>Status</th><th>Groups</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Username</th><th>Email</th><th>Status</th><th>Roles</th><th>Actions</th></tr></thead>
             <tbody>
               @for (user of bootstrap()!.users; track user.id) {
                 <tr>
@@ -81,12 +81,14 @@
                   <td>
                     <span class="status-pill" [class.status-ok]="user.enabled && !user.locked" [class.status-off]="!user.enabled || user.locked">{{ user.locked ? 'Locked' : (user.enabled ? 'Enabled' : 'Disabled') }}</span>
                   </td>
-                  <td>{{ userGroupNames(user) }}</td>
+                  <td>{{ userRoleNames(user) }}</td>
                   <td>
                     <div class="action-cell">
                       <a [routerLink]="'/admin/users/' + user.id" class="ghost-action" style="text-decoration:none;">Edit</a>
-                      <button type="button" class="ghost-action" (click)="toggleUser(user)">{{ user.enabled ? 'Disable' : 'Enable' }}</button>
-                      <button type="button" class="ghost-action danger-text" (click)="deleteUser(user.id, user.username)">Delete</button>
+                      @if (!user.systemAccount) {
+                        <button type="button" class="ghost-action" (click)="toggleUser(user)">{{ user.enabled ? 'Disable' : 'Enable' }}</button>
+                        <button type="button" class="ghost-action danger-text" (click)="deleteUser(user.id, user.username)">Delete</button>
+                      }
                     </div>
                   </td>
                 </tr>
@@ -186,7 +188,9 @@
                   <td>
                     <div class="action-cell">
                       <a [routerLink]="'/admin/roles/' + role.id" class="ghost-action" style="text-decoration:none;">Edit</a>
-                      <button type="button" class="ghost-action danger-text" (click)="deleteRole(role.id, role.name)">Delete</button>
+                      @if (role.name !== 'ADMIN') {
+                        <button type="button" class="ghost-action danger-text" (click)="deleteRole(role.id, role.name)">Delete</button>
+                      }
                     </div>
                   </td>
                 </tr>

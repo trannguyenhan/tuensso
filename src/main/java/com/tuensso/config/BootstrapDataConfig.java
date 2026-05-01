@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import com.tuensso.group.UserGroup;
 import com.tuensso.group.UserGroupRepository;
+import com.tuensso.role.Role;
+import com.tuensso.role.RoleRepository;
 import com.tuensso.user.UserAccount;
 import com.tuensso.user.UserAccountRepository;
 import org.springframework.context.annotation.Bean;
@@ -24,10 +26,11 @@ public class BootstrapDataConfig {
     @Bean
     org.springframework.boot.CommandLineRunner bootstrapUsers(UserAccountRepository userAccountRepository,
                                                               UserGroupRepository userGroupRepository,
+                                                              RoleRepository roleRepository,
                                                               PasswordEncoder passwordEncoder) {
         return args -> {
-            UserGroup adminsGroup = seedGroup(userGroupRepository, "admins", "Admin operators");
-            seedUser(userAccountRepository, passwordEncoder, "admin", "admin@tuensso.local", "123456", adminsGroup);
+            Role adminRole = seedRole(roleRepository, "ADMIN", "System administrator (built-in)");
+            seedUser(userAccountRepository, passwordEncoder, "admin", "admin@tuensso.local", "123456", adminRole);
             seedUser(userAccountRepository, passwordEncoder, "user", "user@tuensso.local", "123456");
         };
     }
@@ -75,13 +78,13 @@ public class BootstrapDataConfig {
                                  String username,
                                  String email,
                                  String rawPassword,
-                                 UserGroup... groups) {
+                                 Role... roles) {
         java.util.Optional<UserAccount> existing = userAccountRepository.findByUsername(username)
-                .flatMap(user -> userAccountRepository.findWithGroupsById(user.getId()));
+                .flatMap(user -> userAccountRepository.findWithGroupsAndRolesById(user.getId()));
         if (existing.isPresent()) {
             UserAccount user = existing.get();
-            for (UserGroup group : groups) {
-                user.getGroups().add(group);
+            for (Role role : roles) {
+                user.getRoles().add(role);
             }
             userAccountRepository.save(user);
             return;
@@ -92,10 +95,20 @@ public class BootstrapDataConfig {
         user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode(rawPassword));
         user.setEnabled(true);
-        for (UserGroup group : groups) {
-            user.getGroups().add(group);
+        if (roles.length > 0) user.setSystemAccount(true);
+        for (Role role : roles) {
+            user.getRoles().add(role);
         }
         userAccountRepository.save(user);
+    }
+
+    private static Role seedRole(RoleRepository roleRepository, String name, String description) {
+        return roleRepository.findByName(name).orElseGet(() -> {
+            Role role = new Role();
+            role.setName(name);
+            role.setDescription(description);
+            return roleRepository.save(role);
+        });
     }
 
     private static UserGroup seedGroup(UserGroupRepository userGroupRepository,

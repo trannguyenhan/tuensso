@@ -12,6 +12,7 @@ export interface SessionResponse {
   authenticated: boolean;
   username: string | null;
   roles: string[];
+  permissions: string[];
   clientId: string | null;
 }
 
@@ -53,6 +54,7 @@ export interface UserRow {
   phone: string | null;
   address: string | null;
   enabled: boolean;
+  systemAccount: boolean;
   locked: boolean;
   failedLoginAttempts: number;
   lockedUntil: string | null;
@@ -60,6 +62,12 @@ export interface UserRow {
   lastLoginIp: string | null;
   passwordChangedAt: string | null;
   groups: GroupRef[];
+  roles: RoleRef[];
+}
+
+export interface RoleRef {
+  id: string;
+  name: string;
 }
 
 export interface GroupRow {
@@ -101,7 +109,7 @@ export interface PageResponse<T> {
 }
 
 export interface RoleRow {
-  id: string; name: string; description: string; createdAt: string;
+  id: string; name: string; description: string; permissions: string | null; createdAt: string;
 }
 
 export interface ScopeRow {
@@ -111,6 +119,10 @@ export interface ScopeRow {
 
 export interface UserAttributeRow {
   id: string; userId: string; key: string; value: string;
+}
+
+export interface GroupAttributeRow {
+  id: string; groupId: string; key: string; value: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -249,8 +261,11 @@ export class ConsoleApiService {
   getRoleMembers(roleId: string): Observable<AssignedUser[]> {
     return this.http.get<AssignedUser[]>(`/api/admin/roles/${roleId}/users`);
   }
-  createRole(name: string, description: string): Observable<RoleRow> {
-    return this.http.post<RoleRow>('/api/admin/roles', { name, description });
+  createRole(name: string, description: string, permissions?: string): Observable<RoleRow> {
+    return this.http.post<RoleRow>('/api/admin/roles', { name, description, permissions });
+  }
+  updateRole(id: string, payload: { description?: string; permissions?: string }): Observable<RoleRow> {
+    return this.http.put<RoleRow>(`/api/admin/roles/${id}`, payload);
   }
   deleteRole(id: string): Observable<unknown> {
     return this.http.delete(`/api/admin/roles/${id}`);
@@ -307,6 +322,18 @@ export class ConsoleApiService {
 
   updateGroup(groupId: string, payload: { name: string; description: string; }): Observable<unknown> {
     return this.http.put(`/api/admin/groups/${groupId}`, payload);
+  }
+
+  getGroupAttributes(groupId: string): Observable<GroupAttributeRow[]> {
+    return this.http.get<GroupAttributeRow[]>(`/api/admin/groups/${groupId}/attributes`);
+  }
+
+  setGroupAttribute(groupId: string, key: string, value: string): Observable<GroupAttributeRow> {
+    return this.http.put<GroupAttributeRow>(`/api/admin/groups/${groupId}/attributes`, { key, value });
+  }
+
+  deleteGroupAttribute(groupId: string, key: string): Observable<unknown> {
+    return this.http.delete(`/api/admin/groups/${groupId}/attributes/${key}`);
   }
 
   logout(csrf: CsrfResponse): Observable<string> {

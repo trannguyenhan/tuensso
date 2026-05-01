@@ -22,18 +22,24 @@ public class AuthApiController {
     @GetMapping("/session")
     public SessionResponse session(Authentication authentication, HttpServletRequest request) {
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
-            return new SessionResponse(false, null, List.of(), request.getParameter("client_id"));
+            return new SessionResponse(false, null, List.of(), List.of(), request.getParameter("client_id"));
         }
 
         List<String> roles = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
+                .filter(a -> a.startsWith("ROLE_"))
                 .toList();
-        return new SessionResponse(true, authentication.getName(), roles, request.getParameter("client_id"));
+        List<String> permissions = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .filter(a -> a.startsWith("PERM_"))
+                .map(a -> a.substring(5))
+                .toList();
+        return new SessionResponse(true, authentication.getName(), roles, permissions, request.getParameter("client_id"));
     }
 
     public record CsrfResponse(String headerName, String parameterName, String token) {
     }
 
-    public record SessionResponse(boolean authenticated, String username, List<String> roles, String clientId) {
+    public record SessionResponse(boolean authenticated, String username, List<String> roles, List<String> permissions, String clientId) {
     }
 }

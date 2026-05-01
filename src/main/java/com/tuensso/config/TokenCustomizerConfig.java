@@ -33,10 +33,23 @@ public class TokenCustomizerConfig {
                     || "access_token".equals(context.getTokenType().getValue())) {
                 context.getClaims().claim("email", user.getEmail());
                 context.getClaims().claim("preferred_username", user.getUsername());
-                context.getClaims().claim("name", user.getUsername());
+                context.getClaims().claim("name", buildFullName(user));
+                context.getClaims().claim("given_name", nullToEmpty(user.getFirstName()));
+                context.getClaims().claim("family_name", nullToEmpty(user.getLastName()));
                 context.getClaims().claim("groups", groups);
                 context.getClaims().claim("roles", roles);
             }
         };
+    }
+
+    private static String buildFullName(UserAccount user) {
+        String first = nullToEmpty(user.getFirstName());
+        String last = nullToEmpty(user.getLastName());
+        String full = (first + " " + last).trim();
+        return full.isEmpty() ? user.getUsername() : full;
+    }
+
+    private static String nullToEmpty(String s) {
+        return s == null ? "" : s;
     }
 }

@@ -2,8 +2,11 @@ package com.tuensso.user;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -36,24 +39,25 @@ public class DbUserDetailsService implements UserDetailsService {
         // Eagerly load groups and roles
         UserAccount full = userAccountRepository.findWithGroupsAndRolesById(user.getId()).orElse(user);
 
-        List<String> roles = new ArrayList<>();
-        roles.add("USER");
-        boolean isAdmin = full.getGroups().stream()
-                .anyMatch(g -> "admins".equalsIgnoreCase(g.getName()));
-        if (isAdmin) {
-            roles.add("ADMIN");
-        }
-        // Add custom roles from role assignments
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+
+        Set<String> permissions = new LinkedHashSet<>();
         full.getRoles().forEach(r -> {
-            String name = r.getName().toUpperCase().replace(" ", "_");
-            if (!roles.contains(name)) roles.add(name);
+            String roleName = r.getName().toUpperCase().replace(" ", "_");
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + roleName));
+            // Collect permissions from all roles
+            r.getPermissionList().forEach(p -> permissions.add(p.toLowerCase()));
         });
+
+        // Add permissions as PERM_* authorities
+        permissions.forEach(p -> authorities.add(new SimpleGrantedAuthority("PERM_" + p)));
 
         return User.withUsername(user.getUsername())
                 .password(user.getPasswordHash())
                 .disabled(!user.isEnabled())
                 .accountLocked(user.isLocked())
-                .roles(roles.toArray(String[]::new))
+                .authorities(authorities)
                 .build();
     }
 }

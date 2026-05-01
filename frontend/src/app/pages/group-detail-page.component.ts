@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ConsoleApiService, GroupRow, UserRow } from '../services/console-api.service';
+import { ConsoleApiService, GroupRow, UserRow, GroupAttributeRow } from '../services/console-api.service';
 
 @Component({
   selector: 'app-group-detail-page',
@@ -22,9 +22,11 @@ export class GroupDetailPageComponent {
   readonly group = signal<GroupRow | null>(null);
   readonly members = signal<UserRow[]>([]);
   readonly allUsers = signal<UserRow[]>([]);
+  readonly attributes = signal<GroupAttributeRow[]>([]);
 
   form = { name: '', description: '' };
   selectedUserId = '';
+  newAttr = { key: '', value: '' };
 
   constructor() {
     const id = this.route.snapshot.paramMap.get('id')!;
@@ -39,6 +41,7 @@ export class GroupDetailPageComponent {
       next: (data) => { this.group.set(data); this.form.name = data.name; this.form.description = data.description || ''; this.loading.set(false); },
       error: () => { this.showErr('Group not found.'); this.loading.set(false); }
     });
+    this.api.getGroupAttributes(gid).subscribe(a => this.attributes.set(a));
     this.api.bootstrap().subscribe(data => {
       this.allUsers.set(data.users);
       this.members.set(data.users.filter(u => u.groups.some(g => g.id === gid)));
@@ -77,6 +80,22 @@ export class GroupDetailPageComponent {
   removeMember(userId: string): void {
     const g = this.group(); if (!g) return;
     this.api.removeUserFromGroup(g.id, userId).subscribe({ next: () => { this.showMsg('Member removed.'); this.loadAll(); }, error: (err) => this.showErr(err.error?.message ?? 'Failed.') });
+  }
+
+  addAttribute(): void {
+    const g = this.group(); if (!g || !this.newAttr.key.trim()) return;
+    this.api.setGroupAttribute(g.id, this.newAttr.key.trim(), this.newAttr.value).subscribe({
+      next: () => { this.newAttr = { key: '', value: '' }; this.api.getGroupAttributes(g.id).subscribe(a => this.attributes.set(a)); },
+      error: (err) => this.showErr(err.error?.message ?? 'Failed.')
+    });
+  }
+
+  deleteAttribute(key: string): void {
+    const g = this.group(); if (!g) return;
+    this.api.deleteGroupAttribute(g.id, key).subscribe({
+      next: () => this.api.getGroupAttributes(g.id).subscribe(a => this.attributes.set(a)),
+      error: (err) => this.showErr(err.error?.message ?? 'Failed.')
+    });
   }
 
   private showMsg(msg: string): void { this.message.set(msg); this.error.set(null); setTimeout(() => this.message.set(null), 4000); }

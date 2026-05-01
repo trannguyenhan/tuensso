@@ -51,6 +51,9 @@ public class UserAccount {
     @Column(name = "enabled", nullable = false)
     private boolean enabled = true;
 
+    @Column(name = "system_account", nullable = false)
+    private boolean systemAccount = false;
+
     @Column(name = "locked", nullable = false)
     private boolean locked = false;
 
@@ -147,6 +150,9 @@ public class UserAccount {
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
+
+    public boolean isSystemAccount() { return systemAccount; }
+    public void setSystemAccount(boolean systemAccount) { this.systemAccount = systemAccount; }
 
     public Instant getCreatedAt() {
         return createdAt;

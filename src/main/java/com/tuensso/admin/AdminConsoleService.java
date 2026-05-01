@@ -30,7 +30,7 @@ public class AdminConsoleService {
     }
 
     public List<UserRow> users() {
-        return userRepo.findAllWithGroups().stream()
+        return userRepo.findAllWithGroupsAndRoles().stream()
                 .map(user -> new UserRow(
                         user.getId(),
                         user.getUsername(),
@@ -39,6 +39,10 @@ public class AdminConsoleService {
                         user.getGroups().stream()
                     .map(group -> new GroupRef(group.getId(), group.getName()))
                     .sorted(Comparator.comparing(GroupRef::name))
+                                .toList(),
+                        user.getRoles().stream()
+                    .map(role -> new RoleRef(role.getId(), role.getName()))
+                    .sorted(Comparator.comparing(RoleRef::name))
                                 .toList()))
                 .sorted(Comparator.comparing(UserRow::username))
                 .toList();
@@ -143,13 +147,19 @@ public class AdminConsoleService {
         return value == null ? "" : value.trim();
     }
 
-    public record UserRow(UUID id, String username, String email, boolean enabled, List<GroupRef> groups) {
+    public record UserRow(UUID id, String username, String email, boolean enabled, List<GroupRef> groups, List<RoleRef> roles) {
         public String groupsDisplay() {
             return groups.isEmpty() ? "-" : String.join(", ", groups.stream().map(GroupRef::name).toList());
+        }
+        public String rolesDisplay() {
+            return roles.isEmpty() ? "-" : String.join(", ", roles.stream().map(RoleRef::name).toList());
         }
     }
 
     public record GroupRef(UUID id, String name) {
+    }
+
+    public record RoleRef(UUID id, String name) {
     }
 
     public record GroupRow(UUID id, String name, String description, long memberCount) {

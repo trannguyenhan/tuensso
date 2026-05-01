@@ -16,7 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class AppLogoStorageService {
 
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("png", "jpg", "jpeg", "webp");
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("png", "jpg", "jpeg", "webp", "svg");
 
     private final Path logoDir;
 
@@ -32,7 +32,7 @@ public class AppLogoStorageService {
         String extension = extractExtension(file.getOriginalFilename());
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Unsupported logo type. Allowed: png, jpg, jpeg, webp");
+                    "Unsupported logo type. Allowed: png, jpg, jpeg, webp, svg");
         }
 
         String safeClientId = clientId.replaceAll("[^a-zA-Z0-9_-]", "-").toLowerCase(Locale.ROOT);

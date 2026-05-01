@@ -15,6 +15,8 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/api/admin/roles")
 public class RoleAdminController {
 
+    private static final String ADMIN_ROLE_NAME = "ADMIN";
+
     private final RoleRepository roleRepo;
     private final UserAccountRepository userRepo;
 
@@ -48,19 +50,37 @@ public class RoleAdminController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Role create(@RequestBody CreateRoleRequest req) {
+        if (ADMIN_ROLE_NAME.equalsIgnoreCase(req.name())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Cannot create reserved role ADMIN");
+        }
         if (roleRepo.existsByName(req.name())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Role already exists");
         }
         Role role = new Role();
         role.setName(req.name());
         role.setDescription(req.description());
+        role.setPermissions(req.permissions());
+        return roleRepo.save(role);
+    }
+
+    @PutMapping("/{id}")
+    public Role update(@PathVariable UUID id, @RequestBody UpdateRoleRequest req) {
+        Role role = roleRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (ADMIN_ROLE_NAME.equalsIgnoreCase(role.getName())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot modify the built-in ADMIN role");
+        }
+        if (req.description() != null) role.setDescription(req.description());
+        if (req.permissions() != null) role.setPermissions(req.permissions());
         return roleRepo.save(role);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id) {
-        if (!roleRepo.existsById(id)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        Role role = roleRepo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (ADMIN_ROLE_NAME.equalsIgnoreCase(role.getName())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot delete the built-in ADMIN role");
+        }
         roleRepo.deleteById(id);
     }
 
@@ -87,5 +107,6 @@ public class RoleAdminController {
         return user.getRoles().stream().sorted((a, b) -> a.getName().compareTo(b.getName())).toList();
     }
 
-    public record CreateRoleRequest(String name, String description) {}
+    public record CreateRoleRequest(String name, String description, String permissions) {}
+    public record UpdateRoleRequest(String description, String permissions) {}
 }

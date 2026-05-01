@@ -3,6 +3,8 @@ package com.tuensso.admin;
 import java.util.List;
 import java.util.UUID;
 
+import com.tuensso.group.GroupAttribute;
+import com.tuensso.group.GroupAttributeRepository;
 import com.tuensso.group.UserGroup;
 import com.tuensso.group.UserGroupRepository;
 import com.tuensso.user.UserAccount;
@@ -26,10 +28,13 @@ public class GroupAdminController {
 
     private final UserGroupRepository groupRepo;
     private final UserAccountRepository userRepo;
+    private final GroupAttributeRepository attrRepo;
 
-    public GroupAdminController(UserGroupRepository groupRepo, UserAccountRepository userRepo) {
+    public GroupAdminController(UserGroupRepository groupRepo, UserAccountRepository userRepo,
+                                GroupAttributeRepository attrRepo) {
         this.groupRepo = groupRepo;
         this.userRepo = userRepo;
+        this.attrRepo = attrRepo;
     }
 
     @GetMapping
@@ -114,4 +119,33 @@ public class GroupAdminController {
 
     public record GroupView(UUID id, String name, String description, long memberCount) {
     }
+
+    // Group attributes
+    @GetMapping("/{groupId}/attributes")
+    public List<GroupAttribute> getAttributes(@PathVariable UUID groupId) {
+        if (!groupRepo.existsById(groupId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        return attrRepo.findByGroupId(groupId);
+    }
+
+    @PutMapping("/{groupId}/attributes")
+    public GroupAttribute setAttribute(@PathVariable UUID groupId, @RequestBody AttributeRequest req) {
+        if (!groupRepo.existsById(groupId)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        GroupAttribute attr = attrRepo.findByGroupIdAndKey(groupId, req.key()).orElseGet(() -> {
+            GroupAttribute a = new GroupAttribute();
+            a.setGroupId(groupId);
+            a.setKey(req.key());
+            return a;
+        });
+        attr.setValue(req.value());
+        return attrRepo.save(attr);
+    }
+
+    @Transactional
+    @DeleteMapping("/{groupId}/attributes/{key}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAttribute(@PathVariable UUID groupId, @PathVariable String key) {
+        attrRepo.deleteByGroupIdAndKey(groupId, key);
+    }
+
+    public record AttributeRequest(String key, String value) {}
 }

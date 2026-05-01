@@ -54,9 +54,13 @@
               <button type="button" class="ghost-action" (click)="resetPassword()">Reset</button>
             </div>
             <div class="action-row" style="margin-top:8px;">
-              <button type="button" class="ghost-action" (click)="toggleEnabled()">{{ user()!.enabled ? 'Disable' : 'Enable' }}</button>
-              <button type="button" class="ghost-action" (click)="toggleLocked()">{{ user()!.locked ? 'Unlock' : 'Lock' }}</button>
-              <button type="button" class="ghost-action danger-text" (click)="deleteUser()">Delete</button>
+              @if (!user()!.systemAccount) {
+                <button type="button" class="ghost-action" (click)="toggleEnabled()">{{ user()!.enabled ? 'Disable' : 'Enable' }}</button>
+                <button type="button" class="ghost-action" (click)="toggleLocked()">{{ user()!.locked ? 'Unlock' : 'Lock' }}</button>
+                <button type="button" class="ghost-action danger-text" (click)="deleteUser()">Delete</button>
+              } @else {
+                <span class="status-pill status-ok">System account</span>
+              }
             </div>
           </div>
         </section>
@@ -133,33 +137,6 @@
           } @else if (allRoles().length === 0) {
             <p class="helper-copy">No roles defined yet. <a routerLink="/admin/roles">Create roles</a> first.</p>
           }
-        </section>
-
-        <section class="surface-card detail-full-width">
-          <div class="card-head"><h3>Custom attributes</h3></div>
-          @if (attributes().length > 0) {
-            <div class="table-shell" style="margin-bottom:12px;">
-              <table class="data-table">
-                <thead><tr><th>Key</th><th>Value</th><th>Actions</th></tr></thead>
-                <tbody>
-                  @for (attr of attributes(); track attr.id) {
-                    <tr>
-                      <td class="mono">{{ attr.key }}</td>
-                      <td>{{ attr.value }}</td>
-                      <td><button type="button" class="ghost-action danger-text" (click)="deleteAttribute(attr.key)">Remove</button></td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          } @else {
-            <p class="empty-hint" style="margin-bottom:12px;">No custom attributes.</p>
-          }
-          <div class="assign-inline" style="grid-template-columns:1fr 1fr auto;">
-            <input [(ngModel)]="newAttr.key" placeholder="Key" autocomplete="off">
-            <input [(ngModel)]="newAttr.value" placeholder="Value" autocomplete="off">
-            <button type="button" class="ghost-action" (click)="addAttribute()">Add</button>
-          </div>
         </section>
       }
     </div>

@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ConsoleApiService, UserRow, GroupRow, RoleRow, UserAttributeRow } from '../services/console-api.service';
+import { ConsoleApiService, UserRow, GroupRow, RoleRow } from '../services/console-api.service';
 import { DatePipe } from '@angular/common';
 
 @Component({
@@ -24,13 +24,11 @@ export class UserDetailPageComponent {
   readonly allGroups = signal<GroupRow[]>([]);
   readonly allRoles = signal<RoleRow[]>([]);
   readonly userRoles = signal<RoleRow[]>([]);
-  readonly attributes = signal<UserAttributeRow[]>([]);
 
   form = { username: '', email: '', password: '', firstName: '', lastName: '', phone: '', address: '' };
   newPassword = '';
   selectedGroupId = '';
   selectedRoleId = '';
-  newAttr = { key: '', value: '' };
 
   constructor() {
     const id = this.route.snapshot.paramMap.get('id')!;
@@ -41,7 +39,6 @@ export class UserDetailPageComponent {
       this.api.bootstrap().subscribe(data => this.allGroups.set(data.groups));
       this.api.getRoles().subscribe(r => this.allRoles.set(r));
       this.api.getUserRoles(id).subscribe(r => this.userRoles.set(r));
-      this.api.getUserAttributes(id).subscribe(a => this.attributes.set(a));
     }
   }
 
@@ -145,20 +142,4 @@ export class UserDetailPageComponent {
 
   private showMsg(msg: string): void { this.message.set(msg); this.error.set(null); setTimeout(() => this.message.set(null), 4000); }
   private showErr(msg: string): void { this.error.set(msg); this.message.set(null); setTimeout(() => this.error.set(null), 6000); }
-
-  addAttribute(): void {
-    const u = this.user(); if (!u || !this.newAttr.key.trim()) return;
-    this.api.setUserAttribute(u.id, this.newAttr.key.trim(), this.newAttr.value).subscribe({
-      next: () => { this.newAttr = { key: '', value: '' }; this.api.getUserAttributes(u.id).subscribe(a => this.attributes.set(a)); },
-      error: (err) => this.showErr(err.error?.message ?? 'Failed.')
-    });
-  }
-
-  deleteAttribute(key: string): void {
-    const u = this.user(); if (!u) return;
-    this.api.deleteUserAttribute(u.id, key).subscribe({
-      next: () => this.api.getUserAttributes(u.id).subscribe(a => this.attributes.set(a)),
-      error: (err) => this.showErr(err.error?.message ?? 'Failed.')
-    });
-  }
 }

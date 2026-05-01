@@ -14,6 +14,10 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, UUID> 
     @Query("select u from UserAccount u")
     java.util.List<UserAccount> findAllWithGroups();
 
+    @EntityGraph(attributePaths = {"groups", "roles"})
+    @Query("select u from UserAccount u")
+    java.util.List<UserAccount> findAllWithGroupsAndRoles();
+
     @EntityGraph(attributePaths = "groups")
     @Query("select u from UserAccount u where u.id = :id")
     Optional<UserAccount> findWithGroupsById(@Param("id") UUID id);

@@ -1,7 +1,7 @@
 package com.tuensso.config;
 
-import com.tuensso.group.UserGroup;
-import com.tuensso.group.UserGroupRepository;
+import com.tuensso.role.Role;
+import com.tuensso.role.RoleRepository;
 import com.tuensso.user.UserAccount;
 import com.tuensso.user.UserAccountRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,27 +24,27 @@ public class AdminBootstrapConfig {
 
     @Bean
     CommandLineRunner bootstrapAdmin(UserAccountRepository userRepo,
-                                     UserGroupRepository groupRepo,
+                                     RoleRepository roleRepo,
                                      PasswordEncoder passwordEncoder) {
         return args -> {
             if (adminUsername == null || adminUsername.isBlank() || adminPassword == null || adminPassword.isBlank()) return;
 
-            // Ensure admins group exists
-            UserGroup adminsGroup = groupRepo.findByName("admins").orElseGet(() -> {
-                UserGroup g = new UserGroup();
-                g.setName("admins");
-                g.setDescription("Administrators");
-                return groupRepo.save(g);
+            Role adminRole = roleRepo.findByName("ADMIN").orElseGet(() -> {
+                Role r = new Role();
+                r.setName("ADMIN");
+                r.setDescription("System administrator (built-in)");
+                r.setPermissions(String.join(",", Role.ALL_PERMISSIONS));
+                return roleRepo.save(r);
             });
 
-            // Create admin user if not exists
             if (userRepo.findByUsername(adminUsername).isEmpty()) {
                 UserAccount admin = new UserAccount();
                 admin.setUsername(adminUsername);
                 admin.setEmail(adminEmail);
                 admin.setPasswordHash(passwordEncoder.encode(adminPassword));
                 admin.setEnabled(true);
-                admin.getGroups().add(adminsGroup);
+                admin.setSystemAccount(true);
+                admin.getRoles().add(adminRole);
                 userRepo.save(admin);
             }
         };

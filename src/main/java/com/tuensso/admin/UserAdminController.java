@@ -6,8 +6,6 @@ import java.util.UUID;
 import com.tuensso.audit.AuditService;
 import com.tuensso.user.UserAccount;
 import com.tuensso.user.UserAccountRepository;
-import com.tuensso.user.UserAttribute;
-import com.tuensso.user.UserAttributeRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -28,14 +26,12 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserAdminController {
 
     private final UserAccountRepository userRepo;
-    private final UserAttributeRepository attrRepo;
     private final PasswordEncoder passwordEncoder;
     private final AuditService audit;
 
-    public UserAdminController(UserAccountRepository userRepo, UserAttributeRepository attrRepo,
+    public UserAdminController(UserAccountRepository userRepo,
                                PasswordEncoder passwordEncoder, AuditService audit) {
         this.userRepo = userRepo;
-        this.attrRepo = attrRepo;
         this.passwordEncoder = passwordEncoder;
         this.audit = audit;
     }
@@ -53,7 +49,7 @@ public class UserAdminController {
                 .map(g -> new GroupRef(g.getId().toString(), g.getName())).toList();
         return new UserDetailResponse(user.getId().toString(), user.getUsername(), user.getEmail(),
                 user.getFirstName(), user.getLastName(), user.getPhone(), user.getAddress(),
-                user.isEnabled(), user.isLocked(), user.getFailedLoginAttempts(),
+                user.isEnabled(), user.isSystemAccount(), user.isLocked(), user.getFailedLoginAttempts(),
                 user.getLockedUntil(), user.getLastLoginAt(), user.getLastLoginIp(),
                 user.getPasswordChangedAt(), groups);
     }
@@ -61,7 +57,7 @@ public class UserAdminController {
     public record GroupRef(String id, String name) {}
     public record UserDetailResponse(String id, String username, String email,
             String firstName, String lastName, String phone, String address,
-            boolean enabled, boolean locked, int failedLoginAttempts,
+            boolean enabled, boolean systemAccount, boolean locked, int failedLoginAttempts,
             java.time.Instant lockedUntil, java.time.Instant lastLoginAt, String lastLoginIp,
             java.time.Instant passwordChangedAt, java.util.List<GroupRef> groups) {}
 
@@ -156,6 +152,9 @@ public class UserAdminController {
     public void delete(@PathVariable UUID id, Authentication auth) {
         UserAccount user = userRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (user.isSystemAccount()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot delete system account");
+        }
         userRepo.deleteById(id);
         audit.log("USER_DELETED", auth.getName(), "user", user.getUsername(), null, null);
     }
@@ -164,33 +163,4 @@ public class UserAdminController {
     public record UpdateUserRequest(String username, String email,
                                      String firstName, String lastName, String phone, String address) {}
     public record ChangePasswordRequest(String newPassword) {}
-
-    // Custom attributes
-    @GetMapping("/{id}/attributes")
-    public java.util.List<UserAttribute> getAttributes(@PathVariable java.util.UUID id) {
-        return attrRepo.findByUserId(id);
-    }
-
-    @PutMapping("/{id}/attributes")
-    public UserAttribute setAttribute(@PathVariable java.util.UUID id,
-                                      @RequestBody AttributeRequest req) {
-        if (!userRepo.existsById(id)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        UserAttribute attr = attrRepo.findByUserIdAndKey(id, req.key()).orElseGet(() -> {
-            UserAttribute a = new UserAttribute();
-            a.setUserId(id);
-            a.setKey(req.key());
-            return a;
-        });
-        attr.setValue(req.value());
-        return attrRepo.save(attr);
-    }
-
-    @jakarta.transaction.Transactional
-    @DeleteMapping("/{id}/attributes/{key}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteAttribute(@PathVariable java.util.UUID id, @PathVariable String key) {
-        attrRepo.deleteByUserIdAndKey(id, key);
-    }
-
-    public record AttributeRequest(String key, String value) {}
 }

@@ -2,11 +2,12 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ConsoleApiService, RoleRow, AssignedUser, UserRow } from '../services/console-api.service';
+import { TitleCasePipe } from '@angular/common';
 
 @Component({
   selector: 'app-role-detail-page',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, TitleCasePipe],
   templateUrl: './role-detail-page.component.html'
 })
 export class RoleDetailPageComponent {
@@ -23,16 +24,26 @@ export class RoleDetailPageComponent {
   readonly members = signal<AssignedUser[]>([]);
   readonly allUsers = signal<UserRow[]>([]);
 
+  readonly allPermissions = ['dashboard', 'apps', 'users', 'groups', 'roles', 'sessions', 'audit', 'integration'];
   form = { name: '', description: '' };
+  permChecks: Record<string, boolean> = {};
   selectedUserId = '';
 
+  get isAdminRole(): boolean { return this.role()?.name === 'ADMIN'; }
+
   constructor() {
+    this.allPermissions.forEach(p => this.permChecks[p] = false);
     const id = this.route.snapshot.paramMap.get('id')!;
     this.isCreate = id === 'create';
     if (this.isCreate) { this.loading.set(false); }
     else {
       this.api.getRole(id).subscribe({
-        next: r => { this.role.set(r); this.form.name = r.name; this.form.description = r.description || ''; this.loading.set(false); },
+        next: r => {
+          this.role.set(r); this.form.name = r.name; this.form.description = r.description || '';
+          const perms = (r.permissions || '').split(',').map(s => s.trim()).filter(Boolean);
+          this.allPermissions.forEach(p => this.permChecks[p] = perms.includes(p));
+          this.loading.set(false);
+        },
         error: () => this.loading.set(false)
       });
       this.api.getRoleMembers(id).subscribe(m => this.members.set(m));
@@ -40,11 +51,20 @@ export class RoleDetailPageComponent {
     }
   }
 
+  private buildPermissions(): string {
+    return this.allPermissions.filter(p => this.permChecks[p]).join(',');
+  }
+
   save(): void {
     this.saving.set(true);
     if (this.isCreate) {
-      this.api.createRole(this.form.name, this.form.description).subscribe({
+      this.api.createRole(this.form.name, this.form.description, this.buildPermissions()).subscribe({
         next: () => void this.router.navigateByUrl('/admin/roles'),
+        error: err => { this.saving.set(false); this.showErr(err.error?.message ?? 'Failed.'); }
+      });
+    } else {
+      this.api.updateRole(this.role()!.id, { description: this.form.description, permissions: this.buildPermissions() }).subscribe({
+        next: (updated) => { this.role.set(updated); this.saving.set(false); this.showMsg('Saved.'); },
         error: err => { this.saving.set(false); this.showErr(err.error?.message ?? 'Failed.'); }
       });
     }

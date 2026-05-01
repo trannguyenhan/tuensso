@@ -107,6 +107,7 @@ export class ConsolePageComponent {
   }
 
   userGroupNames(user: UserRow): string { return user.groups.map(g => g.name).join(', ') || '-'; }
+  userRoleNames(user: UserRow): string { return user.roles?.map(r => r.name).join(', ') || '-'; }
 
   // Sessions
   revokeSession(id: string): void {

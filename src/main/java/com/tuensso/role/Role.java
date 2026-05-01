@@ -1,6 +1,9 @@
 package com.tuensso.role;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import jakarta.persistence.*;
@@ -9,6 +12,9 @@ import jakarta.persistence.*;
 @Table(name = "roles")
 public class Role {
 
+    public static final List<String> ALL_PERMISSIONS = List.of(
+            "dashboard", "apps", "users", "groups", "roles", "sessions", "audit", "integration");
+
     @Id
     private UUID id;
 
@@ -16,6 +22,9 @@ public class Role {
     private String name;
 
     private String description;
+
+    @Column(name = "permissions")
+    private String permissions;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -32,4 +41,11 @@ public class Role {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
     public Instant getCreatedAt() { return createdAt; }
+    public String getPermissions() { return permissions; }
+    public void setPermissions(String permissions) { this.permissions = permissions; }
+
+    public List<String> getPermissionList() {
+        if (permissions == null || permissions.isBlank()) return Collections.emptyList();
+        return Arrays.stream(permissions.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
+    }
 }
