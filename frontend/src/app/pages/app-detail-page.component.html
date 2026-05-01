@@ -17,9 +17,9 @@
 
   <div class="detail-grid">
     <!-- Left: Settings -->
-    <section class="surface-card">
+    <section class="surface-card settings-card">
       <div class="card-head"><h3>{{ isCreate ? 'Client settings' : 'Settings' }}</h3></div>
-      <form class="stack-form" (ngSubmit)="save()">
+      <form class="stack-form settings-form" (ngSubmit)="save()">
         <label>Client ID</label>
         @if (isCreate) {
           <div class="input-with-action">
@@ -57,7 +57,7 @@
           <span>Require PKCE</span>
         </label>
 
-        <button type="submit" [disabled]="saving()">{{ isCreate ? (saving() ? 'Creating...' : 'Create application') : (saving() ? 'Saving...' : 'Save changes') }}</button>
+        <button type="submit" class="settings-submit" [disabled]="saving()">{{ isCreate ? (saving() ? 'Creating...' : 'Create application') : (saving() ? 'Saving...' : 'Save changes') }}</button>
       </form>
     </section>
 
@@ -108,6 +108,27 @@
       </section>
     </div>
   </div>
+
+  <!-- Token fields reference -->
+  <section class="surface-card" style="margin-top:16px;">
+    <div class="card-head"><h3>Token fields</h3></div>
+    <p class="hint" style="margin:0 0 12px;">Sample claims returned in ID Token and Access Token — map these when configuring your client.</p>
+    <div class="tab-row" style="display:flex;gap:8px;margin-bottom:12px;">
+      <button type="button"
+        [class.ghost-action]="sampleTab !== 'id_token'"
+        [class.primary-action]="sampleTab === 'id_token'"
+        (click)="sampleTab = 'id_token'">ID Token / Userinfo</button>
+      <button type="button"
+        [class.ghost-action]="sampleTab !== 'access_token'"
+        [class.primary-action]="sampleTab === 'access_token'"
+        (click)="sampleTab = 'access_token'">Access Token</button>
+    </div>
+    <div style="position:relative;">
+      <pre class="token-sample">{{ sampleTab === 'id_token' ? sampleIdToken : sampleAccessToken }}</pre>
+      <button type="button" class="icon-btn" style="position:absolute;top:8px;right:8px;" title="Copy"
+        (click)="copyToClipboard(sampleTab === 'id_token' ? sampleIdToken : sampleAccessToken)">&#x2398;</button>
+    </div>
+  </section>
 
   <!-- User Assignment (edit mode only) -->
   @if (!isCreate && app()) {

@@ -1,6 +1,8 @@
 <section class="auth-page">
   <div class="auth-card" style="text-align:center;">
-    @if (brandLogo) {
+    @if (!brandingResolved()) {
+      <div class="sso-card-placeholder" aria-hidden="true"></div>
+    } @else if (brandLogo) {
       <img [src]="brandLogo" alt="" class="sso-card-logo">
     } @else {
       <div class="sso-card-avatar" [style.background]="brandColor">
@@ -11,9 +13,24 @@
     }
     <p class="auth-copy" style="margin-top:12px;">Sign in to <strong>{{ brandName }}</strong></p>
 
+    @if (hasError()) {
+      <div class="message-banner error" style="margin-top:14px; text-align:left;">
+        Invalid username or password. Please try again.
+      </div>
+    }
+
     <form action="/login" method="post" class="auth-form">
       @if (csrf()) {
         <input type="hidden" [attr.name]="csrf()?.parameterName" [value]="csrf()?.token">
+      }
+      @if (clientId()) {
+        <input type="hidden" name="client_id" [value]="clientId()">
+      }
+      @if (sessionCode()) {
+        <input type="hidden" name="session_code" [value]="sessionCode()">
+      }
+      @if (tabId()) {
+        <input type="hidden" name="tab_id" [value]="tabId()">
       }
       <input id="username" name="username" type="text" autocomplete="username" placeholder="Username or email" required aria-label="Username or email">
       <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Password" required aria-label="Password">

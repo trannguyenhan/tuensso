@@ -135,6 +135,45 @@ export class AppDetailPageComponent {
     });
   }
 
+  sampleTab: 'id_token' | 'access_token' = 'id_token';
+
+  get sampleIdToken(): string {
+    const clientId = this.app()?.clientId || this.form.clientId || 'your-client';
+    return JSON.stringify({
+      iss: '<issuer>',
+      sub: '<user-uuid>',
+      aud: clientId,
+      iat: '<unix-timestamp>',
+      exp: '<unix-timestamp>',
+      email: 'alice@example.com',
+      preferred_username: 'alice',
+      name: 'Alice Smith',
+      given_name: 'Alice',
+      family_name: 'Smith',
+      groups: ['engineering', 'devops'],
+      roles: ['ADMIN']
+    }, null, 2);
+  }
+
+  get sampleAccessToken(): string {
+    const clientId = this.app()?.clientId || this.form.clientId || 'your-client';
+    return JSON.stringify({
+      iss: '<issuer>',
+      sub: '<user-uuid>',
+      aud: clientId,
+      iat: '<unix-timestamp>',
+      exp: '<unix-timestamp>',
+      scope: (this.app()?.scopes ?? ['openid', 'profile', 'email']).join(' '),
+      email: 'alice@example.com',
+      preferred_username: 'alice',
+      name: 'Alice Smith',
+      given_name: 'Alice',
+      family_name: 'Smith',
+      groups: ['engineering', 'devops'],
+      roles: ['ADMIN']
+    }, null, 2);
+  }
+
   copyToClipboard(value: string): void { navigator.clipboard.writeText(value).then(() => this.showMsg('Copied.')); }
   regenerateId(): void { this.form.clientId = this.genId(); }
   regenerateSecret(): void { this.form.clientSecret = this.genSecret(); }

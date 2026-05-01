@@ -36,8 +36,8 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Configuration
 public class SecurityConfig {
@@ -88,6 +88,47 @@ public class SecurityConfig {
                 .anyRequest().authenticated())
                 .formLogin(form -> form
                         .loginPage("/login")
+                .failureHandler((request, response, exception) -> {
+                    String clientId = request.getParameter("client_id");
+                    String sessionCode = request.getParameter("session_code");
+                    String tabId = request.getParameter("tab_id");
+
+                    var saved = new org.springframework.security.web.savedrequest.HttpSessionRequestCache()
+                            .getRequest(request, response);
+
+                    if ((clientId == null || clientId.isBlank()) && saved != null) {
+                        try {
+                            clientId = UriComponentsBuilder.fromUriString(saved.getRedirectUrl())
+                                    .build()
+                                    .getQueryParams()
+                                    .getFirst("client_id");
+                        } catch (Exception ignored) {
+                            // Keep graceful fallback to default login screens.
+                        }
+                    }
+
+                    if (clientId != null && !clientId.isBlank()) {
+                        StringBuilder ssoErrorUrl = new StringBuilder("/sso-login?error=")
+                                .append("&client_id=")
+                                .append(java.net.URLEncoder.encode(clientId, java.nio.charset.StandardCharsets.UTF_8));
+                        if (sessionCode != null && !sessionCode.isBlank()) {
+                            ssoErrorUrl.append("&session_code=")
+                                    .append(java.net.URLEncoder.encode(sessionCode, java.nio.charset.StandardCharsets.UTF_8));
+                        }
+                        if (tabId != null && !tabId.isBlank()) {
+                            ssoErrorUrl.append("&tab_id=")
+                                    .append(java.net.URLEncoder.encode(tabId, java.nio.charset.StandardCharsets.UTF_8));
+                        }
+                        response.sendRedirect(ssoErrorUrl.toString());
+                        return;
+                    }
+
+                    if ("1".equals(request.getParameter("admin"))) {
+                        response.sendRedirect("/admin/login?error=");
+                    } else {
+                        response.sendRedirect("/login?error=");
+                    }
+                })
                 .successHandler((request, response, authentication) -> {
                     var saved = new org.springframework.security.web.savedrequest.HttpSessionRequestCache()
                             .getRequest(request, response);
