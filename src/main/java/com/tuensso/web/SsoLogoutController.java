@@ -56,18 +56,24 @@ public class SsoLogoutController {
     }
 
     /**
-     * Validates redirect_uri by exact-matching against registered redirect URIs for the client.
+     * Validates redirect_uri against post_logout_redirect_uris first, then redirect_uris as fallback.
      */
     private String validateRedirectUri(String clientId, String redirectUri, String state) {
         if (redirectUri == null || redirectUri.isBlank()) return null;
 
-        String redirectUris = jdbcTemplate.query(
-                "select redirect_uris from oauth2_registered_client where client_id = ?",
-                rs -> rs.next() ? rs.getString("redirect_uris") : "",
+        String[] columns = jdbcTemplate.query(
+                "select redirect_uris, post_logout_redirect_uris from oauth2_registered_client where client_id = ?",
+                rs -> {
+                    if (rs.next()) {
+                        return new String[]{ rs.getString("redirect_uris"), rs.getString("post_logout_redirect_uris") };
+                    }
+                    return new String[]{ "", "" };
+                },
                 clientId);
 
         String requested = redirectUri.trim();
-        for (String registered : redirectUris.split(",")) {
+        String allUris = ((columns[1] != null ? columns[1] : "") + "," + (columns[0] != null ? columns[0] : ""));
+        for (String registered : allUris.split(",")) {
             if (requested.equals(registered.trim())) {
                 if (state != null && !state.isBlank()) {
                     return UriComponentsBuilder.fromUriString(requested)
