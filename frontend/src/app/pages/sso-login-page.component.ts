@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ConsoleApiService, CsrfResponse, BrandingResponse } from '../services/console-api.service';
@@ -6,6 +6,7 @@ import { ConsoleApiService, CsrfResponse, BrandingResponse } from '../services/c
 @Component({
   selector: 'app-sso-login-page',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sso-login-page.component.html'
 })
 export class SsoLoginPageComponent {

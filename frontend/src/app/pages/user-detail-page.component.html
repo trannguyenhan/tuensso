@@ -1,5 +1,5 @@
 @if (loading()) {
-    <p class="empty-hint">Loading...</p>
+    <div class="detail-page"><div class="skeleton skeleton-text" style="height:20px;width:200px;margin-bottom:16px;"></div><div style="display:grid;gap:10px;">@for (_ of [1,2,3,4]; track $index) { <div class="skeleton skeleton-text wide"></div> }</div></div>
   } @else {
     @if (message()) {
       <div class="message-banner success">{{ message() }}</div>

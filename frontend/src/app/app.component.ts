@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, switchMap } from 'rxjs';
@@ -7,6 +7,7 @@ import { ConsoleApiService, CsrfResponse, SessionResponse } from './services/con
 @Component({
   selector: 'app-root',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   template: `
     @if (isPlainRoute()) {
@@ -25,7 +26,9 @@ import { ConsoleApiService, CsrfResponse, SessionResponse } from './services/con
     } @else {
       <section class="console-screen">
         <header class="console-mobile-topbar">
-          <button class="menu-button" type="button" (click)="drawerOpen.set(true)">Menu</button>
+          <button class="menu-button" type="button" (click)="drawerOpen.set(true)" aria-label="Open menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/></svg>
+          </button>
           <span class="mobile-title">TuenSSO</span>
           <button class="ghost-action" type="button" (click)="logout()">Logout</button>
         </header>

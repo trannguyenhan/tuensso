@@ -1,5 +1,14 @@
 @if (loading()) {
-    <p class="empty-hint">Loading...</p>
+    <div class="page-header"><div class="skeleton skeleton-text half" style="height:28px;width:180px;"></div></div>
+    <div class="stat-grid">
+      @for (_ of [1,2,3,4,5]; track $index) {
+        <div class="stat-card" style="opacity:.7;"><div class="skeleton skeleton-stat"></div><div class="skeleton skeleton-text third" style="margin-top:8px;"></div></div>
+      }
+    </div>
+    <div class="dash-grid">
+      <div class="surface-card"><div class="skeleton skeleton-text wide" style="height:18px;margin-bottom:16px;width:140px;"></div>@for (_ of [1,2,3]; track $index) { <div class="skeleton skeleton-text wide" style="margin-bottom:8px;height:36px;"></div> }</div>
+      <div class="surface-card"><div class="skeleton skeleton-text wide" style="height:18px;margin-bottom:16px;width:120px;"></div>@for (_ of [1,2,3,4]; track $index) { <div class="skeleton-row"><div class="skeleton" style="height:13px;"></div></div> }</div>
+    </div>
   } @else if (bootstrap()) {
     <div class="page-header"><h2>Dashboard</h2></div>
 

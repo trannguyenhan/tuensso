@@ -1,39 +1,27 @@
 import { Routes } from '@angular/router';
-import { ConsolePageComponent } from './pages/console-page.component';
-import { LoginPageComponent } from './pages/login-page.component';
-import { SsoLoginPageComponent } from './pages/sso-login-page.component';
-import { SsoLogoutPageComponent } from './pages/sso-logout-page.component';
-import { AppDetailPageComponent } from './pages/app-detail-page.component';
-import { UserDetailPageComponent } from './pages/user-detail-page.component';
-import { GroupDetailPageComponent } from './pages/group-detail-page.component';
-import { RoleDetailPageComponent } from './pages/role-detail-page.component';
-import { DashboardPageComponent } from './pages/dashboard-page.component';
-import { DocsPageComponent } from './pages/docs-page.component';
-import { AccountPageComponent } from './pages/account-page.component';
-import { AdminLoginPageComponent } from './pages/admin-login-page.component';
 
 export const routes: Routes = [
-  { path: 'login', component: LoginPageComponent },
-  { path: 'sso-login', component: SsoLoginPageComponent },
-  { path: 'sso-logout', component: SsoLogoutPageComponent },
-  { path: 'admin/login', component: AdminLoginPageComponent },
+  { path: 'login', loadComponent: () => import('./pages/login-page.component').then(m => m.LoginPageComponent) },
+  { path: 'sso-login', loadComponent: () => import('./pages/sso-login-page.component').then(m => m.SsoLoginPageComponent) },
+  { path: 'sso-logout', loadComponent: () => import('./pages/sso-logout-page.component').then(m => m.SsoLogoutPageComponent) },
+  { path: 'admin/login', loadComponent: () => import('./pages/admin-login-page.component').then(m => m.AdminLoginPageComponent) },
   // User profile (all authenticated users)
-  { path: 'account', component: AccountPageComponent },
-  { path: 'dashboard', component: AccountPageComponent },
+  { path: 'account', loadComponent: () => import('./pages/account-page.component').then(m => m.AccountPageComponent) },
+  { path: 'dashboard', loadComponent: () => import('./pages/account-page.component').then(m => m.AccountPageComponent) },
   // Admin console
-  { path: 'admin/dashboard', component: DashboardPageComponent },
-  { path: 'admin/docs', component: DocsPageComponent },
-  { path: 'admin/apps/:id', component: AppDetailPageComponent },
-  { path: 'admin/users/:id', component: UserDetailPageComponent },
-  { path: 'admin/groups/:id', component: GroupDetailPageComponent },
-  { path: 'admin/roles/:id', component: RoleDetailPageComponent },
-  { path: 'admin/apps', component: ConsolePageComponent },
-  { path: 'admin/users', component: ConsolePageComponent },
-  { path: 'admin/groups', component: ConsolePageComponent },
-  { path: 'admin/integration', component: ConsolePageComponent },
-  { path: 'admin/roles', component: ConsolePageComponent },
-  { path: 'admin/sessions', component: ConsolePageComponent },
-  { path: 'admin/audit', component: ConsolePageComponent },
+  { path: 'admin/dashboard', loadComponent: () => import('./pages/dashboard-page.component').then(m => m.DashboardPageComponent) },
+  { path: 'admin/docs', loadComponent: () => import('./pages/docs-page.component').then(m => m.DocsPageComponent) },
+  { path: 'admin/apps/:id', loadComponent: () => import('./pages/app-detail-page.component').then(m => m.AppDetailPageComponent) },
+  { path: 'admin/users/:id', loadComponent: () => import('./pages/user-detail-page.component').then(m => m.UserDetailPageComponent) },
+  { path: 'admin/groups/:id', loadComponent: () => import('./pages/group-detail-page.component').then(m => m.GroupDetailPageComponent) },
+  { path: 'admin/roles/:id', loadComponent: () => import('./pages/role-detail-page.component').then(m => m.RoleDetailPageComponent) },
+  { path: 'admin/apps', loadComponent: () => import('./pages/console-page.component').then(m => m.ConsolePageComponent) },
+  { path: 'admin/users', loadComponent: () => import('./pages/console-page.component').then(m => m.ConsolePageComponent) },
+  { path: 'admin/groups', loadComponent: () => import('./pages/console-page.component').then(m => m.ConsolePageComponent) },
+  { path: 'admin/integration', loadComponent: () => import('./pages/console-page.component').then(m => m.ConsolePageComponent) },
+  { path: 'admin/roles', loadComponent: () => import('./pages/console-page.component').then(m => m.ConsolePageComponent) },
+  { path: 'admin/sessions', loadComponent: () => import('./pages/console-page.component').then(m => m.ConsolePageComponent) },
+  { path: 'admin/audit', loadComponent: () => import('./pages/console-page.component').then(m => m.ConsolePageComponent) },
   { path: '', pathMatch: 'full', redirectTo: 'account' },
   { path: '**', redirectTo: 'account' }
 ];

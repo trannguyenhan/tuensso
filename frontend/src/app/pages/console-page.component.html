@@ -19,7 +19,8 @@
   }
 
   @if (loading()) {
-    <p class="empty-hint">Loading...</p>
+    <div class="page-header"><div class="skeleton skeleton-text" style="height:26px;width:200px;"></div><div class="skeleton skeleton-text" style="height:30px;width:80px;"></div></div>
+    <div class="table-shell"><div style="padding:16px 14px;display:grid;gap:10px;">@for (_ of [1,2,3,4,5,6,7,8]; track $index) { <div class="skeleton skeleton-text wide"></div> }</div></div>
   } @else if (bootstrap()) {
     <!-- ===== APPS ===== -->
     @if (currentSection() === 'apps') {
