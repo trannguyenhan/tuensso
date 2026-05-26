@@ -88,6 +88,8 @@
               <input type="color" [(ngModel)]="form.primaryColor" name="primaryColor" class="color-input">
               <input [(ngModel)]="form.primaryColor" name="primaryColorText" class="mono" style="flex:1;" maxlength="7">
             </div>
+            <label>Powered by text</label>
+            <input [(ngModel)]="form.poweredByText" name="poweredByText" placeholder="Powered by TuenSSO">
           </div>
         </section>
       }
@@ -102,7 +104,7 @@
             <div class="lp-field"></div>
             <div class="lp-field"></div>
             <div class="lp-btn" [style.background]="previewColor">Sign in</div>
-            <div class="lp-footer">Powered by TuenSSO</div>
+            <div class="lp-footer">{{ form.poweredByText || 'Powered by TuenSSO' }}</div>
           </div>
         </div>
       </section>

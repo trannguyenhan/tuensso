@@ -14,12 +14,12 @@
       @if (redirectUri()) {
         <p class="sso-card-footer">Redirecting back to <strong>{{ clientName() }}</strong>...</p>
       } @else {
-        <a href="/login" class="sso-card-footer" style="display:block;margin-top:16px;">Return to sign in</a>
+        <a [href]="getReturnUrl()" class="sso-card-footer" style="display:block;margin-top:16px;">Return to sign in</a>
       }
     } @else if (!valid()) {
       <h1 style="margin-top:12px;">Invalid request</h1>
       <p class="auth-copy" style="margin-top:8px;">The logout request is not valid.</p>
-      <a href="/login" class="sso-card-footer" style="display:block;margin-top:16px;">Return to sign in</a>
+      <a [href]="getReturnUrl()" class="sso-card-footer" style="display:block;margin-top:16px;">Return to sign in</a>
     } @else {
       <h1 style="margin-top:12px;">Sign out</h1>
       <p class="auth-copy" style="margin-top:8px;">

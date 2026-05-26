@@ -26,7 +26,7 @@ export class AppDetailPageComponent {
   newUserForm = { username: '', email: '', password: '' };
   showCreateUser = false;
 
-  form = { clientId: '', clientName: '', clientSecret: '', redirectUris: '', scopes: 'openid, profile, email', requirePkce: false, primaryColor: '#0f766e' };
+  form = { clientId: '', clientName: '', clientSecret: '', redirectUris: '', scopes: 'openid, profile, email', requirePkce: false, primaryColor: '#0f766e', poweredByText: '' };
   private pendingLogoFile: File | null = null;
 
   constructor() {
@@ -47,6 +47,7 @@ export class AppDetailPageComponent {
           this.form.scopes = data.scopes.join(', ');
           this.form.requirePkce = data.requirePkce;
           this.form.primaryColor = data.primaryColor || '#0f766e';
+          this.form.poweredByText = data.poweredByText || '';
           this.loading.set(false);
         },
         error: () => { this.showErr('App not found.'); this.loading.set(false); }
@@ -117,7 +118,7 @@ export class AppDetailPageComponent {
         error: (err) => { this.saving.set(false); this.showErr(err.error?.message ?? 'Create failed.'); }
       });
     } else {
-      this.api.updateClient(this.app()!.clientId, { clientName: this.form.clientName.trim(), redirectUris: uris, scopes, requirePkce: this.form.requirePkce, primaryColor: this.form.primaryColor }).subscribe({
+      this.api.updateClient(this.app()!.clientId, { clientName: this.form.clientName.trim(), redirectUris: uris, scopes, requirePkce: this.form.requirePkce, primaryColor: this.form.primaryColor, poweredByText: this.form.poweredByText }).subscribe({
         next: (updated) => { this.app.set(updated); this.saving.set(false); this.showMsg('Saved.'); },
         error: (err) => { this.saving.set(false); this.showErr(err.error?.message ?? 'Save failed.'); }
       });

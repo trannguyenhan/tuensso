@@ -41,17 +41,17 @@ public class OidcClientService {
         ClientView base = ClientView.from(client);
         // Fetch extra columns not in RegisteredClient
         return jdbcTemplate.queryForObject(
-                "select logo_uri, primary_color from oauth2_registered_client where client_id = ?",
+                "select logo_uri, primary_color, powered_by_text from oauth2_registered_client where client_id = ?",
                 (rs, n) -> new ClientView(base.id(), base.clientId(), base.clientName(),
                         base.redirectUris(), base.scopes(), base.requirePkce(),
-                        rs.getString("logo_uri"), rs.getString("primary_color")),
+                        rs.getString("logo_uri"), rs.getString("primary_color"), rs.getString("powered_by_text")),
                 clientId);
     }
 
     public List<ClientView> findAll() {
         return jdbcTemplate.query(
                         """
-                select id, client_id, client_name, redirect_uris, scopes, client_settings, logo_uri, primary_color
+                select id, client_id, client_name, redirect_uris, scopes, client_settings, logo_uri, primary_color, powered_by_text
                         from oauth2_registered_client
                         order by client_id asc
                         """,
@@ -63,7 +63,8 @@ public class OidcClientService {
                                 splitCsv(rs.getString("scopes")),
                     parseRequirePkce(rs.getString("client_settings")),
                     rs.getString("logo_uri"),
-                    rs.getString("primary_color")))
+                    rs.getString("primary_color"),
+                    rs.getString("powered_by_text")))
                 .stream()
                 .sorted(Comparator.comparing(ClientView::clientId))
                 .toList();
@@ -163,11 +164,15 @@ public class OidcClientService {
             jdbcTemplate.update("update oauth2_registered_client set primary_color = ? where client_id = ?",
                     command.primaryColor().isBlank() ? null : command.primaryColor().trim(), clientId);
         }
+        if (command.poweredByText() != null) {
+            jdbcTemplate.update("update oauth2_registered_client set powered_by_text = ? where client_id = ?",
+                    command.poweredByText().isBlank() ? null : command.poweredByText().trim(), clientId);
+        }
         return getByClientId(clientId);
     }
 
     public record UpdateClientCommand(String clientName, List<String> redirectUris,
-                                      List<String> scopes, boolean requirePkce, String primaryColor) {}
+                                      List<String> scopes, boolean requirePkce, String primaryColor, String poweredByText) {}
 
     public void delete(String clientId) {
         if (clientRepository.findByClientId(clientId) == null) {
@@ -218,7 +223,8 @@ public class OidcClientService {
                              List<String> scopes,
                              boolean requirePkce,
                              String logoUrl,
-                             String primaryColor) {
+                             String primaryColor,
+                             String poweredByText) {
         public static ClientView from(RegisteredClient client) {
             return new ClientView(
                     client.getId(),
@@ -227,6 +233,7 @@ public class OidcClientService {
                     client.getRedirectUris().stream().toList(),
                     client.getScopes().stream().toList(),
                     client.getClientSettings().isRequireProofKey(),
+                    null,
                     null,
                     null);
         }

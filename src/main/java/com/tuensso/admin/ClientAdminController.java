@@ -66,7 +66,7 @@ public class ClientAdminController {
     public OidcClientService.ClientView update(@PathVariable String clientId,
                                                @RequestBody UpdateClientRequest req) {
         return oidcClientService.update(clientId, new OidcClientService.UpdateClientCommand(
-                req.clientName(), req.redirectUris(), req.scopes(), req.requirePkce(), req.primaryColor()));
+                req.clientName(), req.redirectUris(), req.scopes(), req.requirePkce(), req.primaryColor(), req.poweredByText()));
     }
 
     @DeleteMapping("/{clientId}")
@@ -88,5 +88,6 @@ public class ClientAdminController {
             List<String> redirectUris,
             List<String> scopes,
             boolean requirePkce,
-            String primaryColor) {}
+            String primaryColor,
+            String poweredByText) {}
 }

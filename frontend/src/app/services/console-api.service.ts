@@ -25,12 +25,14 @@ export interface ClientView {
   requirePkce: boolean;
   logoUrl: string | null;
   primaryColor: string | null;
+  poweredByText: string | null;
 }
 
 export interface BrandingResponse {
   clientName: string | null;
   logoUrl: string | null;
   primaryColor: string | null;
+  poweredByText: string | null;
 }
 
 export interface AssignedUser {
@@ -291,7 +293,7 @@ export class ConsoleApiService {
     return this.http.delete(`/api/admin/scopes/${id}`);
   }
 
-  updateClient(clientId: string, payload: { clientName: string; redirectUris: string[]; scopes: string[]; requirePkce: boolean; primaryColor?: string | null; }): Observable<ClientView> {
+  updateClient(clientId: string, payload: { clientName: string; redirectUris: string[]; scopes: string[]; requirePkce: boolean; primaryColor?: string | null; poweredByText?: string | null; }): Observable<ClientView> {
     return this.http.put<ClientView>(`/api/admin/clients/${clientId}`, payload);
   }
 

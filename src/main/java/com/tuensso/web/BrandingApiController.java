@@ -19,13 +19,13 @@ public class BrandingApiController {
     @GetMapping("/{clientId}")
     public BrandingResponse branding(@PathVariable String clientId) {
         return jdbcTemplate.query(
-                "select client_name, logo_uri, primary_color from oauth2_registered_client where client_id = ?",
+                "select client_name, logo_uri, primary_color, powered_by_text from oauth2_registered_client where client_id = ?",
                 rs -> {
-                    if (!rs.next()) return new BrandingResponse(null, null, null);
-                    return new BrandingResponse(rs.getString("client_name"), rs.getString("logo_uri"), rs.getString("primary_color"));
+                    if (!rs.next()) return new BrandingResponse(null, null, null, null);
+                    return new BrandingResponse(rs.getString("client_name"), rs.getString("logo_uri"), rs.getString("primary_color"), rs.getString("powered_by_text"));
                 },
                 clientId);
     }
 
-    public record BrandingResponse(String clientName, String logoUrl, String primaryColor) {}
+    public record BrandingResponse(String clientName, String logoUrl, String primaryColor, String poweredByText) {}
 }

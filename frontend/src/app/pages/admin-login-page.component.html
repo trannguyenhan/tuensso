@@ -25,7 +25,7 @@
         <div class="message-banner error" style="margin-top:16px;">{{ error() }}</div>
       }
 
-      <form action="/login" method="post" class="stack-form" style="margin-top:20px;">
+      <form action="/admin/login" method="post" class="stack-form" style="margin-top:20px;">
         @if (csrf()) {
           <input type="hidden" [attr.name]="csrf()?.parameterName" [value]="csrf()?.token">
         }
@@ -39,10 +39,6 @@
 
         <button type="submit" [disabled]="!csrf()">Sign in</button>
       </form>
-
-      <p class="helper-copy" style="margin-top:16px;text-align:center;">
-        Not an admin? <a href="/login">User sign in</a>
-      </p>
     </div>
   </div>
 </section>

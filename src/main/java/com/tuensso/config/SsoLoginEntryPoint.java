@@ -24,7 +24,7 @@ public class SsoLoginEntryPoint implements AuthenticationEntryPoint {
         String tabId = UUID.randomUUID().toString().substring(0, 6);
 
         StringBuilder url = new StringBuilder(clientId != null && !clientId.isBlank()
-                ? "/sso-login?session_code=" : "/login?session_code=").append(sessionCode)
+                ? "/sso-login?session_code=" : "/admin/login?session_code=").append(sessionCode)
                 .append("&tab_id=").append(tabId);
         if (clientId != null && !clientId.isBlank()) {
             url.append("&client_id=").append(URLEncoder.encode(clientId, StandardCharsets.UTF_8));

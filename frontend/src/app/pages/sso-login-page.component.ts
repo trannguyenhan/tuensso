@@ -63,6 +63,13 @@ export class SsoLoginPageComponent {
   }
   get brandLogo(): string | null { return this.resolvedBrandLogo(); }
   get brandName(): string { return this.branding()?.clientName || this.clientId(); }
+  get poweredByText(): string {
+    const text = this.branding()?.poweredByText;
+    if (text && text.trim()) {
+      return text;
+    }
+    return 'Powered by TuenSSO';
+  }
 
   private preloadBrandLogo(logoUrl: string | null, requestSeq: number): void {
     if (!logoUrl) {

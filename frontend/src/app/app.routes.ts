@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  { path: 'login', loadComponent: () => import('./pages/login-page.component').then(m => m.LoginPageComponent) },
   { path: 'sso-login', loadComponent: () => import('./pages/sso-login-page.component').then(m => m.SsoLoginPageComponent) },
   { path: 'sso-logout', loadComponent: () => import('./pages/sso-logout-page.component').then(m => m.SsoLogoutPageComponent) },
   { path: 'admin/login', loadComponent: () => import('./pages/admin-login-page.component').then(m => m.AdminLoginPageComponent) },

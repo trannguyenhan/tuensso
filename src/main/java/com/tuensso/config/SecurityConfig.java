@@ -72,7 +72,7 @@ public class SecurityConfig {
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-            .requestMatchers("/", "/login", "/sso-login", "/sso-logout", "/connect/logout", "/admin/login", "/index.html", "/error", "/api/auth/**", "/api/oidc/**", "/api/branding/**", "/api/sso/**").permitAll()
+            .requestMatchers("/", "/sso-login", "/sso-logout", "/connect/logout", "/admin/login", "/index.html", "/error", "/api/auth/**", "/api/oidc/**", "/api/branding/**", "/api/sso/**").permitAll()
             .requestMatchers("/*.js", "/*.css", "/*.txt", "/*.map", "/assets/**").permitAll()
                 .requestMatchers("/admin/**", "/api/admin/console/**").hasAnyAuthority(
                         "PERM_dashboard", "PERM_apps", "PERM_users", "PERM_groups",
@@ -87,7 +87,7 @@ public class SecurityConfig {
                 .requestMatchers("/account", "/dashboard", "/api/me").authenticated()
                 .anyRequest().authenticated())
                 .formLogin(form -> form
-                        .loginPage("/login")
+                        .loginPage("/admin/login")
                 .failureHandler((request, response, exception) -> {
                     String clientId = request.getParameter("client_id");
                     String sessionCode = request.getParameter("session_code");
@@ -123,11 +123,7 @@ public class SecurityConfig {
                         return;
                     }
 
-                    if ("1".equals(request.getParameter("admin"))) {
-                        response.sendRedirect("/admin/login?error=");
-                    } else {
-                        response.sendRedirect("/login?error=");
-                    }
+                    response.sendRedirect("/admin/login?error=");
                 })
                 .successHandler((request, response, authentication) -> {
                     var saved = new org.springframework.security.web.savedrequest.HttpSessionRequestCache()

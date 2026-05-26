@@ -69,4 +69,18 @@ export class SsoLogoutPageComponent {
       window.location.href = '/';
     }
   }
+
+  getReturnUrl(): string {
+    // If we have a valid redirect URI from the client, use it
+    const redirect = this.redirectUri();
+    if (redirect) {
+      return redirect;
+    }
+    // If we have a client_id, redirect to client login page
+    if (this.clientId) {
+      return `/sso-login?client_id=${encodeURIComponent(this.clientId)}`;
+    }
+    // Otherwise fall back to home page (clients shouldn't see admin paths)
+    return '/';
+  }
 }
