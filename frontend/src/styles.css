@@ -1267,6 +1267,80 @@ a.app-cell { text-decoration: none; }
   .info-row span:last-child { word-break: break-all; text-align: left; }
   .mono { word-break: break-all; }
   .detail-grid.detail-single { grid-template-columns: 1fr; }
+
+  /* Tables as cards on mobile */
+  .table-shell {
+    border: none;
+    background: transparent;
+  }
+
+  .data-table {
+    display: block;
+  }
+
+  .data-table thead {
+    display: none;
+  }
+
+  .data-table tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  .data-table tbody tr {
+    display: block;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 14px;
+    background: var(--bg-card);
+    box-shadow: var(--shadow);
+  }
+
+  .data-table tbody tr:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  .data-table tbody tr:hover td {
+    background: transparent;
+  }
+
+  .data-table td {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 8px;
+    padding: 8px 0;
+    border: none;
+    align-items: center;
+  }
+
+  .data-table td:before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+
+  .data-table td:first-child {
+    padding-top: 0;
+  }
+
+  .data-table td:last-child {
+    padding-bottom: 0;
+  }
+
+  /* Special handling for app cell */
+  .app-cell {
+    justify-self: start;
+  }
+
+  /* Action cell full width */
+  .action-cell {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    margin-top: 8px;
+  }
 }
 
 @media (max-width: 480px) {

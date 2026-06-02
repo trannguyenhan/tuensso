@@ -157,10 +157,9 @@ export class AppComponent {
       takeUntilDestroyed(this.destroyRef),
       switchMap(s => {
         this.session.set(s);
-        if (!s.authenticated && !this.isPlainRoute()) {
-          const target = this.isAdminRoute() ? '/admin/login' : '/login';
-          void this.router.navigateByUrl(target);
-        }
+        // Don't auto-redirect on protected routes - let Spring Security handle it
+        // This prevents race conditions where session hasn't been established yet after login
+        // Spring Security will redirect to login if needed
         return this.api.csrf();
       })
     ).subscribe({
@@ -183,8 +182,8 @@ export class AppComponent {
     const csrf = this.csrf();
     if (!csrf) return;
     this.api.logout(csrf).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => void this.router.navigateByUrl('/login'),
-      error: () => { window.location.href = '/login'; }
+      next: () => void this.router.navigateByUrl('/admin/login'),
+      error: () => { window.location.href = '/admin/login'; }
     });
   }
 }

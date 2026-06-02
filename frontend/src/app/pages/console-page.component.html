@@ -40,17 +40,17 @@
             <tbody>
               @for (app of bootstrap()!.apps; track app.id) {
                 <tr>
-                  <td>
+                  <td data-label="Application">
                     <a [routerLink]="'/admin/apps/' + app.clientId" class="app-cell table-link">
                       <img [src]="app.logoUrl || '/assets/default-app-logo.svg'" alt="" class="app-logo">
                       <strong>{{ app.clientName || app.clientId }}</strong>
                     </a>
                   </td>
-                  <td class="mono">{{ app.clientId }}</td>
-                  <td><span class="pill">{{ app.scopes.join(', ') }}</span></td>
-                  <td class="mono" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;">{{ app.redirectUris[0] }}</td>
-                  <td><span class="status-pill" [class.status-ok]="app.requirePkce" [class.status-neutral]="!app.requirePkce">{{ app.requirePkce ? 'Yes' : 'No' }}</span></td>
-                  <td><div class="action-cell"><a [routerLink]="'/admin/apps/' + app.clientId" class="ghost-action" style="text-decoration:none;">Edit</a><button type="button" class="ghost-action danger-text" (click)="deleteApp(app.clientId, app.clientName || app.clientId)">Delete</button></div></td>
+                  <td data-label="Client ID" class="mono">{{ app.clientId }}</td>
+                  <td data-label="Scopes"><span class="pill">{{ app.scopes.join(', ') }}</span></td>
+                  <td data-label="Redirect URI" class="mono" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;">{{ app.redirectUris[0] }}</td>
+                  <td data-label="PKCE"><span class="status-pill" [class.status-ok]="app.requirePkce" [class.status-neutral]="!app.requirePkce">{{ app.requirePkce ? 'Yes' : 'No' }}</span></td>
+                  <td data-label="Actions"><div class="action-cell"><a [routerLink]="'/admin/apps/' + app.clientId" class="ghost-action" style="text-decoration:none;">Edit</a><button type="button" class="ghost-action danger-text" (click)="deleteApp(app.clientId, app.clientName || app.clientId)">Delete</button></div></td>
                 </tr>
               }
             </tbody>
@@ -77,13 +77,13 @@
             <tbody>
               @for (user of bootstrap()!.users; track user.id) {
                 <tr>
-                  <td><a [routerLink]="'/admin/users/' + user.id" class="table-link">{{ user.username }}</a></td>
-                  <td class="mono">{{ user.email }}</td>
-                  <td>
+                  <td data-label="Username"><a [routerLink]="'/admin/users/' + user.id" class="table-link">{{ user.username }}</a></td>
+                  <td data-label="Email" class="mono">{{ user.email }}</td>
+                  <td data-label="Status">
                     <span class="status-pill" [class.status-ok]="user.enabled && !user.locked" [class.status-off]="!user.enabled || user.locked">{{ user.locked ? 'Locked' : (user.enabled ? 'Enabled' : 'Disabled') }}</span>
                   </td>
-                  <td>{{ userRoleNames(user) }}</td>
-                  <td>
+                  <td data-label="Roles">{{ userRoleNames(user) }}</td>
+                  <td data-label="Actions">
                     <div class="action-cell">
                       <a [routerLink]="'/admin/users/' + user.id" class="ghost-action" style="text-decoration:none;">Edit</a>
                       @if (!user.systemAccount) {
@@ -118,10 +118,10 @@
             <tbody>
               @for (group of bootstrap()!.groups; track group.id) {
                 <tr>
-                  <td><a [routerLink]="'/admin/groups/' + group.id" class="table-link">{{ group.name }}</a></td>
-                  <td>{{ group.description || '-' }}</td>
-                  <td>{{ group.memberCount }}</td>
-                  <td>
+                  <td data-label="Name"><a [routerLink]="'/admin/groups/' + group.id" class="table-link">{{ group.name }}</a></td>
+                  <td data-label="Description">{{ group.description || '-' }}</td>
+                  <td data-label="Members">{{ group.memberCount }}</td>
+                  <td data-label="Actions">
                     <div class="action-cell">
                       <a [routerLink]="'/admin/groups/' + group.id" class="ghost-action" style="text-decoration:none;">Edit</a>
                       <button type="button" class="ghost-action danger-text" (click)="deleteGroup(group.id, group.name)">Delete</button>
@@ -154,13 +154,13 @@
         <table class="data-table">
           <thead><tr><th>Endpoint</th><th>URL</th></tr></thead>
           <tbody>
-            <tr><td>Authorization</td><td class="mono">{{ bootstrap()!.issuer }}/oauth2/authorize</td></tr>
-            <tr><td>Token</td><td class="mono">{{ bootstrap()!.issuer }}/oauth2/token</td></tr>
-            <tr><td>JWKS</td><td class="mono">{{ bootstrap()!.issuer }}/oauth2/jwks</td></tr>
-            <tr><td>UserInfo</td><td class="mono">{{ bootstrap()!.issuer }}/userinfo</td></tr>
-            <tr><td>End session (logout)</td><td class="mono">{{ bootstrap()!.issuer }}/connect/logout</td></tr>
-            <tr><td>Introspect</td><td class="mono">{{ bootstrap()!.issuer }}/oauth2/introspect</td></tr>
-            <tr><td>Revoke</td><td class="mono">{{ bootstrap()!.issuer }}/oauth2/revoke</td></tr>
+            <tr><td data-label="Endpoint">Authorization</td><td data-label="URL" class="mono">{{ bootstrap()!.issuer }}/oauth2/authorize</td></tr>
+            <tr><td data-label="Endpoint">Token</td><td data-label="URL" class="mono">{{ bootstrap()!.issuer }}/oauth2/token</td></tr>
+            <tr><td data-label="Endpoint">JWKS</td><td data-label="URL" class="mono">{{ bootstrap()!.issuer }}/oauth2/jwks</td></tr>
+            <tr><td data-label="Endpoint">UserInfo</td><td data-label="URL" class="mono">{{ bootstrap()!.issuer }}/userinfo</td></tr>
+            <tr><td data-label="Endpoint">End session (logout)</td><td data-label="URL" class="mono">{{ bootstrap()!.issuer }}/connect/logout</td></tr>
+            <tr><td data-label="Endpoint">Introspect</td><td data-label="URL" class="mono">{{ bootstrap()!.issuer }}/oauth2/introspect</td></tr>
+            <tr><td data-label="Endpoint">Revoke</td><td data-label="URL" class="mono">{{ bootstrap()!.issuer }}/oauth2/revoke</td></tr>
           </tbody>
         </table>
       </div>
@@ -188,10 +188,10 @@
             <tbody>
               @for (role of roles(); track role.id) {
                 <tr>
-                  <td><a [routerLink]="'/admin/roles/' + role.id" class="table-link">{{ role.name }}</a></td>
-                  <td>{{ role.description || '-' }}</td>
-                  <td>{{ role.createdAt | date:'mediumDate' }}</td>
-                  <td>
+                  <td data-label="Name"><a [routerLink]="'/admin/roles/' + role.id" class="table-link">{{ role.name }}</a></td>
+                  <td data-label="Description">{{ role.description || '-' }}</td>
+                  <td data-label="Created">{{ role.createdAt | date:'mediumDate' }}</td>
+                  <td data-label="Actions">
                     <div class="action-cell">
                       <a [routerLink]="'/admin/roles/' + role.id" class="ghost-action" style="text-decoration:none;">Edit</a>
                       @if (role.name !== 'ADMIN') {
@@ -219,11 +219,11 @@
             <tbody>
               @for (s of sessions(); track s.id) {
                 <tr>
-                  <td><strong>{{ s.username }}</strong></td>
-                  <td><span class="pill">{{ s.grantType === 'http_session' ? 'Login' : 'OAuth2' }}</span></td>
-                  <td>{{ s.issuedAt | date:'medium' }}</td>
-                  <td><span class="status-pill" [class.status-ok]="!s.expired" [class.status-off]="s.expired">{{ s.expired ? 'Expired' : 'Active' }}</span></td>
-                  <td>
+                  <td data-label="User"><strong>{{ s.username }}</strong></td>
+                  <td data-label="Type"><span class="pill">{{ s.grantType === 'http_session' ? 'Login' : 'OAuth2' }}</span></td>
+                  <td data-label="Last Activity">{{ s.issuedAt | date:'medium' }}</td>
+                  <td data-label="Status"><span class="status-pill" [class.status-ok]="!s.expired" [class.status-off]="s.expired">{{ s.expired ? 'Expired' : 'Active' }}</span></td>
+                  <td data-label="Actions">
                     <div class="action-cell">
                       <button type="button" class="ghost-action danger-text" (click)="revokeSession(s.id)">Revoke</button>
                       <button type="button" class="ghost-action danger-text" (click)="revokeUserSessions(s.username)">Revoke all</button>
@@ -249,12 +249,12 @@
             <tbody>
               @for (e of auditLog(); track e.id) {
                 <tr>
-                  <td>{{ e.createdAt | date:'medium' }}</td>
-                  <td><span class="pill">{{ e.eventType }}</span></td>
-                  <td>{{ e.username || '-' }}</td>
-                  <td>{{ e.targetId || '-' }}</td>
-                  <td>{{ e.detail || '-' }}</td>
-                  <td class="mono">{{ e.ipAddress || '-' }}</td>
+                  <td data-label="Time">{{ e.createdAt | date:'medium' }}</td>
+                  <td data-label="Event"><span class="pill">{{ e.eventType }}</span></td>
+                  <td data-label="User">{{ e.username || '-' }}</td>
+                  <td data-label="Target">{{ e.targetId || '-' }}</td>
+                  <td data-label="Detail">{{ e.detail || '-' }}</td>
+                  <td data-label="IP" class="mono">{{ e.ipAddress || '-' }}</td>
                 </tr>
               }
             </tbody>

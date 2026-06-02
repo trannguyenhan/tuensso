@@ -33,11 +33,20 @@ export class AccountPageComponent {
     this.api.session().pipe(
       takeUntilDestroyed(this.destroyRef),
       switchMap(s => {
-        if (!s.authenticated) void this.router.navigateByUrl('/login');
+        if (!s.authenticated) {
+          // Don't auto-redirect unauthenticated users - let Spring Security handle it
+          // This prevents regular users from seeing the admin login page
+          this.loading.set(false);
+          return [];
+        }
         this.isAdmin.set(s.roles.includes('ROLE_ADMIN'));
         return this.api.csrf();
       }),
-      switchMap(c => { this.csrf.set(c); return this.api.profile(); })
+      switchMap(c => {
+        if (!c) return [];
+        this.csrf.set(c);
+        return this.api.profile();
+      })
     ).subscribe({
       next: (p) => { this.profile.set(p); this.loading.set(false); },
       error: () => this.loading.set(false)
@@ -74,8 +83,15 @@ export class AccountPageComponent {
     const csrf = this.csrf();
     if (!csrf) return;
     this.api.logout(csrf).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: () => void this.router.navigateByUrl('/login'),
-      error: () => { window.location.href = '/login'; }
+      next: () => {
+        // Redirect to admin login if admin, otherwise let Spring Security handle redirect
+        if (this.isAdmin()) {
+          void this.router.navigateByUrl('/admin/login');
+        } else {
+          window.location.href = '/'; // Will be handled by Spring Security
+        }
+      },
+      error: () => { window.location.href = '/'; }
     });
   }
 

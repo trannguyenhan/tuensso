@@ -70,10 +70,12 @@ public class SecurityConfig {
     @Bean
     @Order(2)
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+        System.out.println("=== Configuring default filter chain (Order 2) ===");
         http.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-            .requestMatchers("/", "/sso-login", "/sso-logout", "/connect/logout", "/admin/login", "/index.html", "/error", "/api/auth/**", "/api/oidc/**", "/api/branding/**", "/api/sso/**").permitAll()
+            .requestMatchers("/", "/sso-login", "/sso-logout", "/connect/logout", "/admin/login", "/login", "/index.html", "/error", "/api/auth/**", "/api/oidc/**", "/api/branding/**", "/api/sso/**").permitAll()
             .requestMatchers("/*.js", "/*.css", "/*.txt", "/*.map", "/assets/**").permitAll()
+                .requestMatchers("/admin/dashboard", "/admin/docs").hasRole("ADMIN")
                 .requestMatchers("/admin/**", "/api/admin/console/**").hasAnyAuthority(
                         "PERM_dashboard", "PERM_apps", "PERM_users", "PERM_groups",
                         "PERM_roles", "PERM_sessions", "PERM_audit", "PERM_integration")
@@ -86,15 +88,23 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/scopes/**").hasAuthority("PERM_apps")
                 .requestMatchers("/account", "/dashboard", "/api/me").authenticated()
                 .anyRequest().authenticated())
-                .formLogin(form -> form
-                        .loginPage("/admin/login")
-                .failureHandler((request, response, exception) -> {
+                .formLogin(form -> {
+                    form.loginPage("/admin/login");
+                    form.loginProcessingUrl("/login");
+                    form.permitAll();
+                    form.failureHandler((request, response, exception) -> {
+                    System.out.println("=== LOGIN FAILURE DEBUG ===");
+                    System.out.println("Exception: " + exception.getClass().getName() + ": " + exception.getMessage());
+                    System.out.println("Admin parameter: " + request.getParameter("admin"));
+                    System.out.println("Username: " + request.getParameter("username"));
+
                     String clientId = request.getParameter("client_id");
                     String sessionCode = request.getParameter("session_code");
                     String tabId = request.getParameter("tab_id");
 
                     var saved = new org.springframework.security.web.savedrequest.HttpSessionRequestCache()
                             .getRequest(request, response);
+                    System.out.println("Saved request: " + (saved != null ? saved.getRedirectUrl() : "null"));
 
                     if ((clientId == null || clientId.isBlank()) && saved != null) {
                         try {
@@ -126,18 +136,32 @@ public class SecurityConfig {
                     response.sendRedirect("/admin/login?error=");
                 })
                 .successHandler((request, response, authentication) -> {
-                    var saved = new org.springframework.security.web.savedrequest.HttpSessionRequestCache()
-                            .getRequest(request, response);
+                    System.out.println("=== LOGIN SUCCESS === User: " + authentication.getName() + ", admin=" + request.getParameter("admin"));
+
+                    var requestCache = new org.springframework.security.web.savedrequest.HttpSessionRequestCache();
+
+                    // If admin parameter is present, prioritize admin console login
+                    if ("1".equals(request.getParameter("admin"))) {
+                        requestCache.removeRequest(request, response);
+                        System.out.println("Redirecting to /admin/dashboard");
+                        response.sendRedirect("/admin/dashboard");
+                        return;
+                    }
+
+                    // Otherwise check for saved OAuth2 request
+                    var saved = requestCache.getRequest(request, response);
                     if (saved != null) {
+                        System.out.println("Redirecting to saved: " + saved.getRedirectUrl());
                         response.sendRedirect(saved.getRedirectUrl());
                     } else {
-                        String dest = "1".equals(request.getParameter("admin"))
-                                ? "/admin/dashboard" : "/dashboard";
-                        response.sendRedirect(dest);
+                        System.out.println("Redirecting to /dashboard");
+                        response.sendRedirect("/dashboard");
                     }
+                });
                 })
-                        .permitAll())
-                .sessionManagement(sm -> sm.maximumSessions(-1).sessionRegistry(sessionRegistry()))
+                .sessionManagement(sm -> sm
+                        .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.ALWAYS)
+                        .maximumSessions(-1).sessionRegistry(sessionRegistry()))
                 .logout(Customizer.withDefaults())
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())

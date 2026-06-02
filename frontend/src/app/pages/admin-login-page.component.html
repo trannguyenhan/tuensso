@@ -25,7 +25,7 @@
         <div class="message-banner error" style="margin-top:16px;">{{ error() }}</div>
       }
 
-      <form action="/admin/login" method="post" class="stack-form" style="margin-top:20px;">
+      <form action="/login" method="post" class="stack-form" style="margin-top:20px;">
         @if (csrf()) {
           <input type="hidden" [attr.name]="csrf()?.parameterName" [value]="csrf()?.token">
         }
