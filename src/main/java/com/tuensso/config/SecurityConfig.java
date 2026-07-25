@@ -8,6 +8,8 @@ import java.util.UUID;
 
 import javax.sql.DataSource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.nimbusds.jose.jwk.JWKSet;
@@ -42,7 +44,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Configuration
 public class SecurityConfig {
 
-    // -----------------------------------------------------------------------
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
+
     // Filter chain 1 — Authorization Server endpoints (OIDC/OAuth2)
     // /oauth2/authorize, /oauth2/token, /userinfo, /oauth2/jwks, v.v.
     // -----------------------------------------------------------------------
@@ -65,17 +68,14 @@ public class SecurityConfig {
 
     // -----------------------------------------------------------------------
     // Filter chain 2 — Login form + Admin API
-    // /admin/** requires ROLE_ADMIN
-    // -----------------------------------------------------------------------
     @Bean
     @Order(2)
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        System.out.println("=== Configuring default filter chain (Order 2) ===");
+        log.debug("Configuring default filter chain (Order 2)");
         http.authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
             .requestMatchers("/", "/sso-login", "/sso-logout", "/connect/logout", "/admin/login", "/login", "/index.html", "/error", "/api/auth/**", "/api/oidc/**", "/api/branding/**", "/api/sso/**").permitAll()
             .requestMatchers("/*.js", "/*.css", "/*.txt", "/*.map", "/assets/**").permitAll()
-                .requestMatchers("/admin/dashboard", "/admin/docs").hasRole("ADMIN")
                 .requestMatchers("/admin/**", "/api/admin/console/**").hasAnyAuthority(
                         "PERM_dashboard", "PERM_apps", "PERM_users", "PERM_groups",
                         "PERM_roles", "PERM_sessions", "PERM_audit", "PERM_integration")
@@ -93,10 +93,9 @@ public class SecurityConfig {
                     form.loginProcessingUrl("/login");
                     form.permitAll();
                     form.failureHandler((request, response, exception) -> {
-                    System.out.println("=== LOGIN FAILURE DEBUG ===");
-                    System.out.println("Exception: " + exception.getClass().getName() + ": " + exception.getMessage());
-                    System.out.println("Admin parameter: " + request.getParameter("admin"));
-                    System.out.println("Username: " + request.getParameter("username"));
+                    log.debug("Login failure: {} - {}", exception.getClass().getName(), exception.getMessage());
+                    log.debug("Admin parameter: {}", request.getParameter("admin"));
+                    log.debug("Username: {}", request.getParameter("username"));
 
                     String clientId = request.getParameter("client_id");
                     String sessionCode = request.getParameter("session_code");
@@ -104,7 +103,7 @@ public class SecurityConfig {
 
                     var saved = new org.springframework.security.web.savedrequest.HttpSessionRequestCache()
                             .getRequest(request, response);
-                    System.out.println("Saved request: " + (saved != null ? saved.getRedirectUrl() : "null"));
+                    log.debug("Saved request: {}", saved != null ? saved.getRedirectUrl() : "null");
 
                     if ((clientId == null || clientId.isBlank()) && saved != null) {
                         try {
@@ -136,25 +135,31 @@ public class SecurityConfig {
                     response.sendRedirect("/admin/login?error=");
                 })
                 .successHandler((request, response, authentication) -> {
-                    System.out.println("=== LOGIN SUCCESS === User: " + authentication.getName() + ", admin=" + request.getParameter("admin"));
+                    // Decide the landing page from the authenticated user's real authorities,
+                    // never from a client-supplied request parameter (e.g. admin=1), which any
+                    // caller could set regardless of actual role — that mismatch was causing
+                    // non-admins to be sent to /admin/dashboard (then 403) and real admins who
+                    // logged in via the plain form to be sent to the user console instead.
+                    boolean hasAdminAccess = authentication.getAuthorities().stream()
+                            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")
+                                    || a.getAuthority().startsWith("PERM_"));
+                    log.debug("Login success: User={}, hasAdminAccess={}", authentication.getName(), hasAdminAccess);
 
                     var requestCache = new org.springframework.security.web.savedrequest.HttpSessionRequestCache();
 
-                    // If admin parameter is present, prioritize admin console login
-                    if ("1".equals(request.getParameter("admin"))) {
+                    if ("1".equals(request.getParameter("admin")) && hasAdminAccess) {
                         requestCache.removeRequest(request, response);
-                        System.out.println("Redirecting to /admin/dashboard");
+                        log.debug("Redirecting to /admin/dashboard");
                         response.sendRedirect("/admin/dashboard");
                         return;
                     }
 
-                    // Otherwise check for saved OAuth2 request
                     var saved = requestCache.getRequest(request, response);
                     if (saved != null) {
-                        System.out.println("Redirecting to saved: " + saved.getRedirectUrl());
+                        log.debug("Redirecting to saved: {}", saved.getRedirectUrl());
                         response.sendRedirect(saved.getRedirectUrl());
                     } else {
-                        System.out.println("Redirecting to /dashboard");
+                        log.debug("Redirecting to /dashboard");
                         response.sendRedirect("/dashboard");
                     }
                 });

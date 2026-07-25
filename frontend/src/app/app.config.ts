@@ -1,6 +1,6 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideHttpClient, withInterceptors, HttpInterceptorFn } from '@angular/common/http';
-import { provideRouter, withPreloading, PreloadAllModules } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 
 const csrfInterceptor: HttpInterceptorFn = (req, next) => {
@@ -17,7 +17,7 @@ const csrfInterceptor: HttpInterceptorFn = (req, next) => {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true, runCoalescing: true }),
-    provideRouter(routes, withPreloading(PreloadAllModules)),
+    provideRouter(routes),
     provideHttpClient(withInterceptors([csrfInterceptor]))
   ]
 };

@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http';
@@ -9,6 +9,7 @@ interface LogoutResult { success: boolean; redirectUri: string | null; }
 @Component({
   selector: 'app-sso-logout-page',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './sso-logout-page.component.html'
 })
 export class SsoLogoutPageComponent {

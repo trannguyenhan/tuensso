@@ -1,25 +1,28 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, finalize } from 'rxjs';
-import { BootstrapResponse, ConsoleApiService, UserRow, SessionRow, AuditEntry, PageResponse, RoleRow } from '../services/console-api.service';
+import { ConsoleApiService, UserRow, SessionRow, AuditEntry, RoleRow } from '../services/console-api.service';
+import { BootstrapService } from '../services/bootstrap.service';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-console-page',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, FormsModule, DatePipe],
   templateUrl: './console-page.component.html'
 })
 export class ConsolePageComponent {
   private readonly api = inject(ConsoleApiService);
+  private readonly bootstrapService = inject(BootstrapService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private dismissTimer: ReturnType<typeof setTimeout> | null = null;
 
-  readonly bootstrap = signal<BootstrapResponse | null>(null);
+  readonly bootstrap = this.bootstrapService.data;
   readonly loading = signal(true);
   readonly message = signal<string | null>(null);
   readonly error = signal<string | null>(null);
@@ -63,11 +66,10 @@ export class ConsolePageComponent {
 
   reload(): void {
     this.loading.set(true);
-    this.api.bootstrap().pipe(
+    this.bootstrapService.invalidateAndFetch().pipe(
       takeUntilDestroyed(this.destroyRef),
       finalize(() => this.loading.set(false))
     ).subscribe({
-      next: (data) => this.bootstrap.set(data),
       error: () => this.showError('Unable to load console data.')
     });
   }

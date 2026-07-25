@@ -28,7 +28,7 @@ spring:
     locations: classpath:db/migration/${tuensso.db-type:mariadb}
 
   thymeleaf:
-    cache: false
+    cache: true
 
 logging:
   level:

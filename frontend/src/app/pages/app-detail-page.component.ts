@@ -1,18 +1,23 @@
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ConsoleApiService, ClientView, AssignedUser, UserRow } from '../services/console-api.service';
+import { BootstrapService } from '../services/bootstrap.service';
 
 @Component({
   selector: 'app-detail-page',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, RouterLink],
   templateUrl: './app-detail-page.component.html'
 })
 export class AppDetailPageComponent {
   private readonly api = inject(ConsoleApiService);
+  private readonly bootstrapService = inject(BootstrapService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly isCreate: boolean;
   readonly loading = signal(true);
@@ -53,7 +58,7 @@ export class AppDetailPageComponent {
         error: () => { this.showErr('App not found.'); this.loading.set(false); }
       });
       this.loadAssignedUsers(id);
-      this.api.bootstrap().subscribe(data => this.allUsers.set(data.users));
+      this.bootstrapService.get().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(data => this.allUsers.set(data.users));
     }
   }
 
@@ -98,7 +103,7 @@ export class AppDetailPageComponent {
         this.newUserForm = { username: '', email: '', password: '' };
         this.showCreateUser = false;
         this.loadAssignedUsers(a.clientId);
-        this.api.bootstrap().subscribe(data => this.allUsers.set(data.users));
+        this.bootstrapService.invalidateAndFetch().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(data => this.allUsers.set(data.users));
       },
       error: (err) => this.showErr(err.error?.message ?? 'Failed.')
     });

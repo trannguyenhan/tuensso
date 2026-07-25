@@ -32,6 +32,11 @@ public class TokenCustomizerConfig {
             if (context.getTokenType().getValue().equals(OidcParameterNames.ID_TOKEN)
                     || "access_token".equals(context.getTokenType().getValue())) {
                 context.getClaims().claim("email", user.getEmail());
+                // TuenSSO has no self-service email verification flow yet: every account is
+                // created/edited directly by an admin through the trusted admin console, so the
+                // email on file is treated as verified by this provider (OIDC email_verified
+                // semantics: "the OP asserts this email belongs to the user").
+                context.getClaims().claim("email_verified", true);
                 context.getClaims().claim("preferred_username", user.getUsername());
                 context.getClaims().claim("name", buildFullName(user));
                 context.getClaims().claim("given_name", nullToEmpty(user.getFirstName()));

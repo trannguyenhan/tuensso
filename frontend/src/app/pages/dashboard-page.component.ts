@@ -1,24 +1,26 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { ConsoleApiService, BootstrapResponse } from '../services/console-api.service';
+import { ConsoleApiService } from '../services/console-api.service';
+import { BootstrapService } from '../services/bootstrap.service';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
   templateUrl: './dashboard-page.component.html'
 })
 export class DashboardPageComponent {
-  private readonly api = inject(ConsoleApiService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly bootstrapService = inject(BootstrapService);
 
-  readonly bootstrap = signal<BootstrapResponse | null>(null);
+  readonly bootstrap = this.bootstrapService.data;
   readonly loading = signal(true);
 
   constructor() {
-    this.api.bootstrap().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (data) => { this.bootstrap.set(data); this.loading.set(false); },
+    this.bootstrapService.get().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => this.loading.set(false),
       error: () => this.loading.set(false)
     });
   }

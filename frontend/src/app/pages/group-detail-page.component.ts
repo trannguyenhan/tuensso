@@ -1,18 +1,23 @@
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ConsoleApiService, GroupRow, UserRow, GroupAttributeRow } from '../services/console-api.service';
+import { BootstrapService } from '../services/bootstrap.service';
 
 @Component({
   selector: 'app-group-detail-page',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, RouterLink],
   templateUrl: './group-detail-page.component.html'
 })
 export class GroupDetailPageComponent {
   private readonly api = inject(ConsoleApiService);
+  private readonly bootstrapService = inject(BootstrapService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly isCreate: boolean;
   readonly loading = signal(true);
@@ -37,12 +42,12 @@ export class GroupDetailPageComponent {
 
   private loadAll(groupId?: string): void {
     const gid = groupId ?? this.route.snapshot.paramMap.get('id')!;
-    this.api.getGroup(gid).subscribe({
+    this.api.getGroup(gid).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (data) => { this.group.set(data); this.form.name = data.name; this.form.description = data.description || ''; this.loading.set(false); },
       error: () => { this.showErr('Group not found.'); this.loading.set(false); }
     });
-    this.api.getGroupAttributes(gid).subscribe(a => this.attributes.set(a));
-    this.api.bootstrap().subscribe(data => {
+    this.api.getGroupAttributes(gid).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(a => this.attributes.set(a));
+    this.bootstrapService.get().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(data => {
       this.allUsers.set(data.users);
       this.members.set(data.users.filter(u => u.groups.some(g => g.id === gid)));
       const g = data.groups.find(g => g.id === gid);

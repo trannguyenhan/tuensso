@@ -1,5 +1,7 @@
 package com.tuensso.user;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,4 +35,7 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, UUID> 
     boolean existsByUsername(String username);
 
     long countByGroups_Id(UUID groupId);
+
+    @Query("select element(u.groups).id as gid, count(u) as cnt from UserAccount u where element(u.groups).id in :groupIds group by element(u.groups).id")
+    List<Object[]> countMembersByGroupIds(@Param("groupIds") List<UUID> groupIds);
 }

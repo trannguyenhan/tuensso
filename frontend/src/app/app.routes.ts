@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
+  { path: '', loadComponent: () => import('./pages/home-page.component').then(m => m.HomePageComponent) },
   { path: 'sso-login', loadComponent: () => import('./pages/sso-login-page.component').then(m => m.SsoLoginPageComponent) },
   { path: 'sso-logout', loadComponent: () => import('./pages/sso-logout-page.component').then(m => m.SsoLogoutPageComponent) },
   { path: 'admin/login', loadComponent: () => import('./pages/admin-login-page.component').then(m => m.AdminLoginPageComponent) },
@@ -21,6 +22,5 @@ export const routes: Routes = [
   { path: 'admin/roles', loadComponent: () => import('./pages/console-page.component').then(m => m.ConsolePageComponent) },
   { path: 'admin/sessions', loadComponent: () => import('./pages/console-page.component').then(m => m.ConsolePageComponent) },
   { path: 'admin/audit', loadComponent: () => import('./pages/console-page.component').then(m => m.ConsolePageComponent) },
-  { path: '', pathMatch: 'full', redirectTo: 'account' },
-  { path: '**', redirectTo: 'account' }
+  { path: '**', redirectTo: '' }
 ];

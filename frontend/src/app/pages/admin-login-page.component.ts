@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ConsoleApiService, CsrfResponse } from '../services/console-api.service';
@@ -6,6 +6,7 @@ import { ConsoleApiService, CsrfResponse } from '../services/console-api.service
 @Component({
   selector: 'app-admin-login-page',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './admin-login-page.component.html'
 })
 export class AdminLoginPageComponent {

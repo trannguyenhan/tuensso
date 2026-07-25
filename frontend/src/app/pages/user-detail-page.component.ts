@@ -1,19 +1,24 @@
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ConsoleApiService, UserRow, GroupRow, RoleRow } from '../services/console-api.service';
+import { BootstrapService } from '../services/bootstrap.service';
 import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-user-detail-page',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, RouterLink, DatePipe],
   templateUrl: './user-detail-page.component.html'
 })
 export class UserDetailPageComponent {
   private readonly api = inject(ConsoleApiService);
+  private readonly bootstrapService = inject(BootstrapService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly isCreate: boolean;
   readonly loading = signal(true);
@@ -36,9 +41,9 @@ export class UserDetailPageComponent {
     if (this.isCreate) { this.loading.set(false); }
     else {
       this.loadUser(id);
-      this.api.bootstrap().subscribe(data => this.allGroups.set(data.groups));
-      this.api.getRoles().subscribe(r => this.allRoles.set(r));
-      this.api.getUserRoles(id).subscribe(r => this.userRoles.set(r));
+      this.bootstrapService.get().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(data => this.allGroups.set(data.groups));
+      this.api.getRoles().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(r => this.allRoles.set(r));
+      this.api.getUserRoles(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(r => this.userRoles.set(r));
     }
   }
 

@@ -2,7 +2,9 @@ package com.tuensso.admin;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.tuensso.group.UserGroup;
 import com.tuensso.group.UserGroupRepository;
@@ -49,12 +51,24 @@ public class AdminConsoleService {
     }
 
     public List<GroupRow> groups() {
-        return groupRepo.findAll().stream()
+        List<UserGroup> allGroups = groupRepo.findAll();
+        if (allGroups.isEmpty()) {
+            return List.of();
+        }
+
+        List<UUID> groupIds = allGroups.stream().map(UserGroup::getId).toList();
+        Map<UUID, Long> memberCounts = userRepo.countMembersByGroupIds(groupIds).stream()
+                .collect(Collectors.toMap(
+                        row -> (UUID) row[0],
+                        row -> (Long) row[1]
+                ));
+
+        return allGroups.stream()
                 .map(group -> new GroupRow(
                         group.getId(),
                         group.getName(),
                         group.getDescription(),
-                        userRepo.countByGroups_Id(group.getId())))
+                        memberCounts.getOrDefault(group.getId(), 0L)))
                 .sorted(Comparator.comparing(GroupRow::name))
                 .toList();
     }

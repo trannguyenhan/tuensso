@@ -1,7 +1,9 @@
 package com.tuensso.admin;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import com.tuensso.group.GroupAttribute;
 import com.tuensso.group.GroupAttributeRepository;
@@ -39,12 +41,24 @@ public class GroupAdminController {
 
     @GetMapping
     public List<GroupView> list() {
-        return groupRepo.findAll().stream()
+        List<UserGroup> allGroups = groupRepo.findAll();
+        if (allGroups.isEmpty()) {
+            return List.of();
+        }
+
+        List<UUID> groupIds = allGroups.stream().map(UserGroup::getId).toList();
+        Map<UUID, Long> memberCounts = userRepo.countMembersByGroupIds(groupIds).stream()
+                .collect(Collectors.toMap(
+                        row -> (UUID) row[0],
+                        row -> (Long) row[1]
+                ));
+
+        return allGroups.stream()
                 .map(group -> new GroupView(
                         group.getId(),
                         group.getName(),
                         group.getDescription(),
-                        userRepo.countByGroups_Id(group.getId())))
+                        memberCounts.getOrDefault(group.getId(), 0L)))
                 .toList();
     }
 
