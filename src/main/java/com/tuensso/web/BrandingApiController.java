@@ -1,10 +1,15 @@
 package com.tuensso.web;
 
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/branding")
@@ -17,7 +22,14 @@ public class BrandingApiController {
     }
 
     @GetMapping("/{clientId}")
-    public BrandingResponse branding(@PathVariable String clientId) {
+    public ResponseEntity<BrandingResponse> branding(@PathVariable String clientId) {
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(1, TimeUnit.MINUTES).cachePublic())
+                .body(brandingForClient(clientId));
+    }
+
+    @Cacheable("branding")
+    BrandingResponse brandingForClient(String clientId) {
         return jdbcTemplate.query(
                 "select client_name, logo_uri, primary_color, powered_by_text from oauth2_registered_client where client_id = ?",
                 rs -> {

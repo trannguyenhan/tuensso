@@ -18,7 +18,8 @@ export class LoginPageComponent {
   constructor() {
     this.api.session().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((session) => {
       if (session.authenticated) {
-        void this.router.navigateByUrl(session.roles.includes('ROLE_ADMIN') ? '/admin/dashboard' : '/account');
+        const hasAdminAccess = session.roles.includes('ROLE_ADMIN') || session.permissions.length > 0;
+        void this.router.navigateByUrl(hasAdminAccess ? '/admin/dashboard' : '/account');
         return;
       }
       this.api.csrf().pipe(takeUntilDestroyed(this.destroyRef)).subscribe((csrf) => this.csrf.set(csrf));

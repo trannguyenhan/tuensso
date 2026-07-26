@@ -19,7 +19,8 @@ export class AdminLoginPageComponent {
 
   constructor() {
     this.api.session().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(s => {
-      if (s.authenticated && s.roles.includes('ROLE_ADMIN')) {
+      const hasAdminAccess = s.roles.includes('ROLE_ADMIN') || s.permissions.length > 0;
+      if (s.authenticated && hasAdminAccess) {
         void this.router.navigateByUrl('/admin/dashboard');
         return;
       }

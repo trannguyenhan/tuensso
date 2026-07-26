@@ -177,8 +177,16 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // Eagerly load CSRF token so the cookie is always set for SPA
+    // Eagerly load CSRF token so the cookie is set for the SPA — but only on
+    // requests that actually need it (auth/admin API calls), so static assets
+    // and other GET traffic don't pay for a forced cookie write on every hit.
     static class CsrfCookieFilter extends org.springframework.web.filter.OncePerRequestFilter {
+        @Override
+        protected boolean shouldNotFilter(jakarta.servlet.http.HttpServletRequest request) {
+            String path = request.getServletPath();
+            return !(path.startsWith("/api/") || path.equals("/login") || path.startsWith("/admin/"));
+        }
+
         @Override
         protected void doFilterInternal(jakarta.servlet.http.HttpServletRequest request,
                                         jakarta.servlet.http.HttpServletResponse response,

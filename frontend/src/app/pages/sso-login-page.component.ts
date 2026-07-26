@@ -41,6 +41,9 @@ export class SsoLoginPageComponent {
           next: (b) => {
             if (requestSeq !== this.brandingRequestSeq) return;
             this.branding.set(b);
+            // Show brand name/color immediately; the logo swaps in once it
+            // loads instead of blocking the whole card behind an <img> fetch.
+            this.brandingResolved.set(true);
             this.preloadBrandLogo(b.logoUrl, requestSeq);
           },
           error: () => {
